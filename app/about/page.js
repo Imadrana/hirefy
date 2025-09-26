@@ -1,18 +1,18 @@
-"use client"
+"use client" // use the page to run on the browser side, not only server. make it able to use interactive features.
 
 import React from 'react';
-import { Users, Target, Award, Globe, Heart, Zap } from 'lucide-react';
-import Link from 'next/link';
+import { Users, Target, Award, Globe, Heart, Zap } from 'lucide-react'; // used for bringing up small pictures from lucide-react library.
+import Link from 'next/link'; //next.js link that makes moving between pages faster and smoother.
 
-const About = () => {
-  const stats = [
+const About = () => { // this fx will return evverything we want to show on about page.
+  const stats = [ //list with four objects, shows quick numbers about company.
     { number: '500K+', label: 'Active Users', icon: <Users className="w-8 h-8" /> },
     { number: '100K+', label: 'Projects Completed', icon: <Target className="w-8 h-8" /> },
     { number: '50+', label: 'Countries', icon: <Globe className="w-8 h-8" /> },
     { number: '4.9', label: 'Average Rating', icon: <Award className="w-8 h-8" /> }
   ];
 
-  const team = [
+  const team = [ //list has info about people in team. 
     {
       name: 'Sarah Chen',
       role: 'CEO & Founder',
@@ -33,7 +33,7 @@ const About = () => {
     }
   ];
 
-  const values = [
+  const values = [ //list shows company values. 
     {
       icon: <Heart className="w-12 h-12 text-red-500" />,
       title: 'People First',
@@ -51,12 +51,12 @@ const About = () => {
     }
   ];
 
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
+  return ( //start returning the page's layout. big container box with atleast height of screen.
+    <div className="min-h-screen bg-white"> 
+      {/* Header */} 
+      <header className="bg-white shadow-sm"> 
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between"> 
             <Link href="/" className="flex items-center">
               <div className="w-8 h-8 bg-red-500 rounded-full mr-2"></div>
               <span className="text-xl font-bold">HireFy</span>
@@ -69,7 +69,7 @@ const About = () => {
           </div>
         </div>
       </header>
-
+        
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-red-500 to-pink-500 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">

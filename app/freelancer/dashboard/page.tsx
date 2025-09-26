@@ -1,11 +1,11 @@
 "use client";
 
-import React from "react";
-import { useProfile } from "../../context/ProfileContext";
-import { useRouter } from "next/navigation";
+import React from "react"; //we import React by writing import React from "react";
+import { useProfile } from "../../context/ProfileContext"; //gives us the freelancer’s saved profile information, like name, email, skills, and bio.
+import { useRouter } from "next/navigation";//tool for moving between pages.
 
-export default function FreelancerDashboard() {
-  const { profile } = useProfile();
+export default function FreelancerDashboard() { //making a component called FreelancerDashboard, and it is the default export of this file. So other files can easily use it.
+  const { profile } = useProfile(); //Get the profile object from the ProfileContext.
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
