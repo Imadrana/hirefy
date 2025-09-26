@@ -1,5 +1,5 @@
 "use client"
-//this is about page for a freelancing marketplace website.
+//this is about page for a freelancing marketplace website and about team. 
 import React from 'react';
 import { Users, Target, Award, Globe, Heart, Zap } from 'lucide-react';
 import Link from 'next/link';
