@@ -1,3 +1,8 @@
+//// ChatGPT Prompt Used
+//“create a reusable Toaster component in Next.js using shadcn/ui toast primitives.
+//it should import useToast from a custom hook and render active toasts inside a ToastProvider.
+//map through all toasts, showing title, description, action button (if any), and include ToastClose and ToastViewport.
+//mark it with 'use client' since it uses hooks.”
 "use client"
 
 import { useToast } from "../../hooks/use-toast"
