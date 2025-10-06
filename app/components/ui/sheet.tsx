@@ -1,3 +1,20 @@
+// ChatGPT Prompt Used
+/*Create a Sheet (drawer) UI component in Next.js 13 using React, TypeScript, Tailwind CSS, and Radix UI Dialog primitives, following Shadcn UI conventions.
+
+Requirements:
+
+Start with "use client".
+
+Import Radix as * as SheetPrimitive from "@radix-ui/react-dialog".
+
+Export these components:
+Sheet, SheetTrigger, SheetClose, SheetPortal, SheetOverlay, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription.
+
+Use class-variance-authority (CVA) to define a sheetVariants helper for different slide directions (top, bottom, left, right).
+
+Add slide-in/out animations with Tailwind data-state classes (e.g. data-[state=open]:slide-in-from-right).
+
+Include a close button with an X icon from lucide-react in the top-right corner.*/
 "use client"
 
 import * as React from "react"
