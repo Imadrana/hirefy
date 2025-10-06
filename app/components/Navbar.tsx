@@ -1,13 +1,59 @@
-'use client';
+// -------------------------------
+//  Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware 
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: app/components/ui File: Navbar.tsx
+//
+// Description:
+// - Front-end React (TypeScript/Next.js) component for the Hirefy Navigation Bar  
+// - Manages navigation links and Firebase authentication state  
+// - Shows Login/Register for guests and Dashboard/Logout for logged-in users  
+// - Includes custom Hirefy SVG logo and mobile-friendly slide menu 
+//
+// Technical Understanding & Research Summary:
+// - Researched through:
+//   • Google search results on React navigation and authentication best practices  
+//   • Official React documentation: https://react.dev  
+//   • Next.js documentation: https://nextjs.org/docs  
+//   • Firebase Authentication docs: https://firebase.google.com/docs/auth  
+//   • YouTube tutorials on responsive navbars and authentication in React
+//     - https://www.youtube.com/watch?v=NWEukI8KsBI  
+//     - https://www.youtube.com/watch?v=6kgitEWTxac  
+//     - https://firebase.google.com/docs/auth
+// - Final code refined and documented with ChatGPT assistance for clarity and maintainability.  
+// -------------------------------
+// ChatGPT Prompt Used
+// -------------------------------
+// I gave ChatGPT the following prompt to help me write and understand
+// this component clearly:
+//
+// "I need you to create a responsive navigation bar (Navbar) for my Hirefy web application,
+// built with React (TypeScript/Next.js). It should manage navigation links, handle authentication
+// state with Firebase, support role-based dashboard routing, and include logout functionality.
+// The Navbar must include a custom logo, a dynamic user dropdown menu for authenticated users,
+// and a mobile-friendly layout for smaller screens, ensuring a seamless and modern user experience."
+// -------------------------------
+//  Summary:
+// - Language: TypeScript / TSX (React / Next.js)
+// - Side: Frontend Component (Client-side)
+// - Libraries Used: firebase/auth, next/link, next/navigation, shadcn/ui, lucide-react
+// - Purpose: To provide a responsive navigation bar with authentication awareness,
+//   dynamic role-based dashboard routing, and a modern mobile drawer menu.
+// -------------------------------
 
-import { useAuth } from '../context/AuthContext';
-import { auth } from '../lib/firebase/firebase';
-import { signOut } from 'firebase/auth';
-import { LayoutDashboard, LogOut, Menu } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Button } from '../components/ui/button';
-import { Skeleton } from '../components/ui/skeleton';
+'use client'; // Next.js directive: this component renders on the client (enables hooks like useState, useRouter, etc.)
+
+import { useAuth } from '../context/AuthContext'; // Custom context: provides { user, userData, loading } for auth state & profile/role.
+import { auth } from '../lib/firebase/firebase'; // Firebase Auth instance configured in your app.
+import { signOut } from 'firebase/auth'; // Firebase sign-out function.
+import { LayoutDashboard, LogOut, Menu } from 'lucide-react'; // Icons used in menu items and mobile trigger.
+import Link from 'next/link'; // Next.js client-side navigation links.
+import { usePathname, useRouter } from 'next/navigation'; // Hooks: current route path + programmatic navigation (router.push).
+import { Button } from '../components/ui/button'; // Reusable Button component (design system / shadcn).
+import { Skeleton } from '../components/ui/skeleton'; // Skeleton loaders for navbar while auth is resolving.
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,13 +61,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '../components/ui/avatar';
-import { Sheet, SheetContent, SheetTrigger } from '../components/ui/sheet';
-import { useState } from 'react';
-import { cn } from "../lib/utils";
+} from '../components/ui/dropdown-menu'; // Dropdown primitives for the user menu.
+import { Avatar, AvatarFallback } from '../components/ui/avatar'; // Avatar UI with fallback initials (no image).
+import { Sheet, SheetContent, SheetTrigger } from '../components/ui/sheet'; // Off-canvas drawer used for the mobile menu.
+import { useState } from 'react'; // React state hook (for mobile menu open/close).
+import { cn } from "../lib/utils"; // Classname helper to merge conditional Tailwind classes.
 
-
+// Brand mark: inline SVG logo wrapped in a link to "/".
 const HirefyLogo = () => (
     <Link href="/" className="flex items-center justify-center h-8 w-8">
         <svg
@@ -31,12 +77,15 @@ const HirefyLogo = () => (
             xmlns="http://www.w3.org/2000/svg"
         >
             <defs>
+                {/* Vertical gradient for the spherical logo */}
                 <linearGradient id="sphereGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" style={{ stopColor: '#FF7B79', stopOpacity: 1 }} />
                 <stop offset="100%" style={{ stopColor: '#FF4C4A', stopOpacity: 1 }} />
                 </linearGradient>
             </defs>
+            {/* Circular background with gradient fill */}
             <circle cx="50" cy="50" r="48" fill="url(#sphereGradient)" />
+            {/* Decorative white arcs (brand style lines) */}
             <path
                 d="M25 35 C40 25, 60 25, 75 35"
                 stroke="white"
@@ -76,8 +125,10 @@ const HirefyLogo = () => (
     </Link>
 )
 
+// Single navigation link with "active" state styling based on current path.
 const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
-    const pathname = usePathname();
+    const pathname = usePathname(); // Current route path (e.g., "/contact").
+    // Active when exact "/" or when pathname starts with the href for nested routes.
     const isActive = href === '/' ? pathname === href : pathname.startsWith(href);
     return (
         <Link href={href} className={cn("font-semibold transition-colors hover:text-primary", isActive ? "text-primary" : "text-foreground/60")}>
@@ -87,10 +138,15 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
 }
 
 export default function Navbar() {
+  // Auth context values:
+  // - user: Firebase user object (null if not logged in)
+  // - userData: your app-specific profile (contains role)
+  // - loading: true while auth state/profile is being fetched
   const { user, userData, loading } = useAuth();
-  const router = useRouter();
-  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const router = useRouter(); // For redirecting after logout.
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false); // Controls the mobile Sheet state.
 
+  // Logs out current user via Firebase, then navigate to /login.
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -100,6 +156,8 @@ export default function Navbar() {
     }
   };
 
+  // Role-based dashboard routing:
+  // Maps the current user's role to its dashboard path.
   const getDashboardPath = () => {
     if (!userData) return '/';
     switch (userData.role) {
@@ -114,11 +172,13 @@ export default function Navbar() {
     }
   };
 
+  // Returns first two characters of email as uppercase initials for AvatarFallback.
   const getInitials = (email: string | undefined | null) => {
     if (!email) return '..';
     return email.substring(0, 2).toUpperCase();
   }
 
+  // Centralized nav links used in both desktop and mobile menus.
   const navLinks = (
     <>
       <NavLink href="/">Home</NavLink>
@@ -128,27 +188,34 @@ export default function Navbar() {
   )
 
   return (
+    // Sticky header with backdrop blur and border; stays fixed at top with high z-index.
     <header className="bg-card/95 border-b backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 flex justify-between items-center h-16">
+        {/* Left side: logo + desktop nav */}
         <div className="flex items-center gap-8">
+            {/* Brand group: logo + brand name */}
             <div className="flex items-center gap-3 group">
                 <HirefyLogo />
                 <Link href="/" className="text-xl font-bold font-headline text-foreground transition-colors">
                   Hirefy
                 </Link>
             </div>
+            {/* Desktop navigation (hidden on small screens) */}
             <nav className="hidden md:flex items-center gap-6">
                 {navLinks}
             </nav>
         </div>
         
+        {/* Right side: auth area + mobile menu trigger */}
         <div className="flex items-center gap-2">
+          {/* While auth state is loading, show skeleton placeholders */}
           {loading ? (
             <div className="flex items-center gap-2">
               <Skeleton className="h-8 w-20" />
               <Skeleton className="h-10 w-10 rounded-full" />
             </div>
           ) : user ? (
+            // If logged in: show avatar button that opens the account dropdown menu
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -157,6 +224,7 @@ export default function Navbar() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
+              {/* Account dropdown content anchored to the avatar button */}
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
@@ -165,6 +233,7 @@ export default function Navbar() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {/* Role-aware "Dashboard" link */}
                 <DropdownMenuItem asChild>
                   <Link href={getDashboardPath()}>
                     <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -172,6 +241,7 @@ export default function Navbar() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {/* Logout action with destructive styling on focus/hover */}
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
@@ -179,6 +249,7 @@ export default function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
+            // If logged out (and not loading): show Login/Register (hidden on small screens)
             <div className="hidden md:flex items-center gap-2">
               <Button asChild variant="ghost" className="font-semibold">
                 <Link href="/login">Login</Link>
@@ -188,21 +259,27 @@ export default function Navbar() {
               </Button>
             </div>
           )}
+           {/* Mobile menu trigger (hamburger) visible only below md breakpoint */}
            <div className="md:hidden">
+            {/* Sheet = slide-over drawer. open/onOpenChange controlled by local state. */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              {/* Clicking this button toggles the Sheet */}
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Menu />
                   <span className="sr-only">Open menu</span>
                 </Button>
               </SheetTrigger>
+              {/* Drawer content slides from the right; contains nav links and auth buttons */}
               <SheetContent side="right" className="w-[240px]">
                 <div className="flex flex-col p-4 pt-12">
                    <nav className="flex flex-col gap-6 text-lg mb-8">
                      {navLinks}
                    </nav>
+                   {/* If user is logged out, show auth buttons inside the drawer */}
                    {!user && !loading && (
                      <div className="flex flex-col gap-3">
+                        {/* Close drawer after navigating (setMobileMenuOpen(false)) */}
                         <Button asChild variant="outline" onClick={() => setMobileMenuOpen(false)}>
                             <Link href="/login">Login</Link>
                         </Button>
