@@ -1,3 +1,46 @@
+// -------------------------------
+//  Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: app/components/ui   File: Button.tsx
+//
+// Description:
+// - Reusable Button component with multiple variants (default, destructive, outline, etc.)
+// - Supports different sizes and icon-only buttons
+// - Uses class-variance-authority for variant handling
+// - Optional asChild prop allows wrapping with a different component like Link
+//
+// Technical Understanding & Research Summary:
+// - Studied CVA library to manage class variants dynamically
+// - Learned forwardRef to allow parent access
+// - TailwindCSS used for button styling: colors, padding, hover, focus, disabled states
+// - Learned integration with Radix Slot for composable children
+//
+// References / Tutorials:
+// • CVA: https://github.com/joe-bell/cva
+// • TailwindCSS Buttons: https://tailwindcss.com/docs/background-color
+// • React forwardRef: https://react.dev/reference/react/forwardRef
+//
+// -------------------------------
+// ChatGPT Prompt Used
+// -------------------------------
+//
+// "I need you to create a reusable Button component for my Hirefy web application.
+// The button should support different sizes, variants, and states (e.g., default, outline, disabled). 
+// It should be styled using TailwindCSS and built with React + TypeScript/TSX. 
+// The component should also accept children (text or icons) and be flexible enough to be used across the app for calls-to-action, 
+// form submissions, and navigation links."
+//
+// -------------------------------
+// Summary:
+// - Language: TypeScript / TSX (React)
+// - Side: Frontend Component (Client-side)
+// - Libraries Used: React, class-variance-authority, TailwindCSS, lucide-react
+// - Purpose: Display reusable buttons with variants, sizes, and optional child components
+// -------------------------------
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"

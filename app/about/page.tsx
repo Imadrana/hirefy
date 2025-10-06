@@ -1,3 +1,49 @@
+// -------------------------------
+//  Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware 
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: app/about   File: page.tsx
+//
+// Description:
+// - Front-end React (TypeScript/TSX) page for the Hirefy About section
+// - Displays company story, mission, and core values
+// - Uses reusable UI components: Button, Card, and ValueCard
+// - Includes responsive design using TailwindCSS utilities
+// - Sections: Hero, Story (with image), Core Values, and CTA
+//
+// Technical Understanding & Research Summary:
+// - Learned about Next.js pages structure and how files in /app folder map to routes
+// - Studied TailwindCSS grid, spacing, and responsive design techniques
+// - Used lucide-react for SVG icons (Building, Heart, Target, etc.)
+// - Implemented reusable subcomponent (ValueCard) to avoid code duplication
+// - Used Next.js Image for optimized rendering of images
+//
+// References / Tutorials:
+// • Next.js Pages Routing: https://nextjs.org/docs/app/building-your-application/routing
+// • TailwindCSS Utilities: https://tailwindcss.com/docs
+// • Lucide Icons: https://lucide.dev
+//
+// -------------------------------
+// ChatGPT Prompt Used
+// -------------------------------
+//
+// "I need you to create an AboutPage for my Hirefy web application. 
+// The page should include a hero section, a story section with text and an image, 
+// a core values section using reusable value cards with icons, 
+// and a call-to-action with a button. Use Next.js with TypeScript/TSX, 
+// TailwindCSS for styling, and import UI components like Card and Button. 
+// The layout should be fully responsive and visually engaging."
+//
+// -------------------------------
+// Summary:
+// - Language: TypeScript / TSX (React + Next.js)
+// - Side: Frontend Page (Client-side)
+// - Libraries Used: Next.js, TailwindCSS, lucide-react
+// - Purpose: Display About content for Hirefy with story, values, and CTA
+// -------------------------------
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Building, Target, Users, Heart } from 'lucide-react';
