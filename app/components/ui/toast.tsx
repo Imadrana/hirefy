@@ -1,4 +1,12 @@
-"use client"
+//ChatGPT Prompt Used
+/*“create a client-side toast component file in Next.js using @radix-ui/react-toast.
+include toast provider, viewport, title, description, close, and action components with proper forwardRef setup.
+use class-variance-authority (cva) for handling toast variants like default and destructive.
+use a cn utility function from lib/utils to merge class names.
+import icons from lucide-react (like the X icon for close button).
+export all toast primitives (ToastProvider, ToastViewport, Toast, ToastTitle, ToastDescription, ToastClose, ToastAction) and define types (ToastProps, ToastActionElement).
+mark it with 'use client' at the top since it uses React hooks and refs.”
+"use client"*/
 
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"

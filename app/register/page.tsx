@@ -1,3 +1,24 @@
+/// ChatGPT Prompt Used
+//prompt use to make the register page.tsx 
+//Create a Next.js registration page using React and Firebase that allows users to sign up with email and password. Use react-hook-form with Zod validation for the form. The form should include:
+
+//- Email input (must be valid email)
+//- Password input (minimum 6 characters) with a show/hide toggle
+//- Role selection as radio buttons: "client" or "professional"
+
+//After successful registration:
+//- Store user info (uid, email, role, createdAt) in Firestore
+//- Redirect clients to "/register/client-details"
+//- Redirect professionals to "/dashboard/professional"
+
+Include:
+//- Tailwind CSS styled components inside a centered card
+//- Toast notifications for success or errors
+//- Loading indicator on the submit button
+//- A link to the login page if the user already has an account
+
+//Use lucide-react icons for the password toggle and loader. Generate a complete functional React component file.
+
 'use client';
 
 import { useState } from 'react';
