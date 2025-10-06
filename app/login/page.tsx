@@ -1,3 +1,43 @@
+/*I’m building a Next.js 13 web app using the App Router.
+Please write a complete client-side login page ('use client' component) that handles Firebase Authentication using email and password.
+
+Requirements:
+
+Use React Hook Form for handling form input.
+
+Use Zod for schema validation and integrate it with React Hook Form using the zodResolver.
+
+Use Shadcn UI components (Button, Card, Form, Input, etc.) for styling.
+
+The page should be styled with Tailwind CSS and centered on the screen.
+
+It should include fields for email and password.
+
+Add a show/hide password toggle using icons from lucide-react (e.g., Eye, EyeOff).
+
+When the user clicks “Login”, authenticate them using signInWithEmailAndPassword from Firebase.
+
+After signing in, get the user’s document from Firestore (collection: users) using their uid.
+
+Based on the role field in Firestore (admin, professional, or client), redirect the user to a specific dashboard route:
+
+/dashboard/admin for admin
+
+/dashboard/professional for professionals
+
+/dashboard/client for clients
+
+If the user document doesn’t exist, sign them out and show an error.
+
+Use a toast notification system (like a custom useToast hook) to display success or error messages.
+
+Show a loading spinner inside the login button while the login process is in progress.
+
+Include a link to the registration page below the form that says “Don’t have an account? Register here”.
+
+Make sure to use proper TypeScript types for the form schema and form data.
+
+Please include the full working component code — imports, form logic, UI layout, and Firebase integration.*/
 'use client';
 
 import { useState } from 'react';
