@@ -3,7 +3,7 @@
 import { useAuth, type UserData } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Loader2, Briefcase, MessageSquare, Search, Settings, User, LayoutGrid, FilePlus2 } from 'lucide-react';
+import { Loader2, Briefcase, MessageSquare, Users, Settings, User, LayoutGrid, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarProvider, Sidebar, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from '@/components/ui/sidebar';
 import Link from 'next/link';
@@ -14,16 +14,20 @@ const ClientSidebar = () => {
 
     const menuItems = [
         { href: '/dashboard/client', label: 'Dashboard', icon: LayoutGrid },
-        { href: '/dashboard/client/post-job', label: 'Post a Job', icon: FilePlus2 },
-        { href: '/dashboard/client/manage-jobs', label: 'Manage Jobs', icon: Briefcase },
-        { href: '/dashboard/client/find-professionals', label: 'Find Professionals', icon: Search },
+        { href: '/dashboard/client/post-job', label: 'Post a Job', icon: Plus },
+        { href: '/dashboard/client/my-jobs', label: 'My Jobs', icon: Briefcase },
+        { href: '/dashboard/client/find-professionals', label: 'Find Professionals', icon: Users },
         { href: '/dashboard/client/messages', label: 'Messages', icon: MessageSquare },
-        { href: '/dashboard/client/profile', label: 'Company Profile', icon: User },
+        { href: '/dashboard/client/profile', label: 'My Profile', icon: User },
         { href: '/dashboard/client/settings', label: 'Settings', icon: Settings },
     ];
 
     return (
         <Sidebar>
+            <div className="px-4 py-6 border-b">
+                <h2 className="text-lg font-bold font-headline">Client</h2>
+                <p className="text-sm text-muted-foreground">Dashboard</p>
+            </div>
             <SidebarMenu>
                 {menuItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
@@ -35,7 +39,7 @@ const ClientSidebar = () => {
                             }}
                          >
                             <Link href={item.href}>
-                                <item.icon />
+                                <item.icon className="h-5 w-5" />
                                 <span>{item.label}</span>
                             </Link>
                         </SidebarMenuButton>
@@ -82,14 +86,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
       <SidebarProvider>
-        <div className="flex">
-            <ClientSidebar />
-            <SidebarInset>
-                <div className="p-4 md:p-8 w-full">
-                    {children}
-                </div>
-            </SidebarInset>
-        </div>
+        <ClientSidebar />
+        <SidebarInset>
+            <div className="p-4 md:p-8 w-full">
+                {children}
+            </div>
+        </SidebarInset>
       </SidebarProvider>
   );
 }

@@ -1,3 +1,6 @@
+'use client';
+
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, Briefcase, User, Activity, AlertCircle } from "lucide-react";
@@ -19,11 +22,21 @@ const StatCard = ({ icon, title, value, description }: { icon: React.ReactNode, 
 
 
 export default function ProfessionalDashboard() {
+  const { userData } = useAuth();
+  
+  // Extract user's display name from userData
+  const displayName = userData?.displayName || userData?.email?.split('@')[0] || 'Professional';
+  
+  // Check if profile is complete (you can customize this logic)
+  const profileComplete = userData?.profile?.isComplete || false;
+
   return (
     <div className="space-y-8">
         <div>
-            <h1 className="text-3xl font-headline font-bold">Professional Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back! Here's a summary of your activity on Hirefy.</p>
+            <h1 className="text-3xl font-headline font-bold">
+              Welcome back, {displayName}!
+            </h1>
+            <p className="text-muted-foreground">Here's a summary of your activity on Hirefy.</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -53,20 +66,22 @@ export default function ProfessionalDashboard() {
             />
         </div>
         
-        <Card className="bg-destructive/5 border-destructive/20">
-            <CardHeader className="flex flex-row items-center gap-4">
-                <AlertCircle className="h-6 w-6 text-destructive" />
-                <div>
-                    <CardTitle>Complete Your Profile!</CardTitle>
-                    <CardDescription className="text-destructive/80">Your profile is only 75% complete. A complete profile gets 3x more views.</CardDescription>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <Button asChild variant="destructive">
-                    <Link href="/dashboard/professional/profile">Update Profile Now</Link>
-                </Button>
-            </CardContent>
-        </Card>
+        {!profileComplete && (
+          <Card className="bg-destructive/5 border-destructive/20">
+              <CardHeader className="flex flex-row items-center gap-4">
+                  <AlertCircle className="h-6 w-6 text-destructive" />
+                  <div>
+                      <CardTitle>Complete Your Profile!</CardTitle>
+                      <CardDescription className="text-destructive/80">Your profile is incomplete. A complete profile gets 3x more views and job invitations.</CardDescription>
+                  </div>
+              </CardHeader>
+              <CardContent>
+                  <Button asChild variant="destructive">
+                      <Link href="/dashboard/professional/profile">Update Profile Now</Link>
+                  </Button>
+              </CardContent>
+          </Card>
+        )}
 
         <Separator />
         
