@@ -1,3 +1,12 @@
+/*Create a modern Next.js 14 dashboard page located at /app/dashboard/professional/page.tsx with 'use client' at the top. Use Tailwind CSS for layout and components from @/components/ui/ like Card, Button, and Separator. Import icons from lucide-react and useAuth() from @/context/AuthContext.
+
+Display a welcome section showing the user’s name from useAuth(). Below that, add a grid of four statistic cards (Active Jobs, Invitations, Profile Views, Active Proposals) with icons and short descriptions.
+
+If the user’s profile is incomplete (userData.profile.isComplete === false), show a red alert card with an AlertCircle icon and a “Complete Your Profile” message, including a red button linking to /dashboard/professional/profile.
+
+After a separator, include two larger cards: one for “Recent Activity” showing sample updates with timestamps, and another encouraging the user to “Find New Jobs,” with a button linking to /dashboard/professional/find-jobs.
+
+The design should look clean, responsive, and professional with clear spacing, rounded corners, and a friendly dashboard layout.*/
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
