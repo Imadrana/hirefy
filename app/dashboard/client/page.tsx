@@ -1,6 +1,9 @@
+'use client';
+
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FilePlus2, Briefcase, Users, DollarSign, Activity } from "lucide-react";
+import { FilePlus2, Briefcase, Users, DollarSign, Activity, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 
@@ -19,10 +22,20 @@ const StatCard = ({ icon, title, value, description }: { icon: React.ReactNode, 
 
 
 export default function ClientDashboard() {
+  const { userData } = useAuth();
+  
+  // Extract company name or user's display name from userData
+  const companyName = userData?.profile?.companyName || userData?.displayName || userData?.email?.split('@')[0] || 'Client';
+  
+  // Check if profile is complete
+  const profileComplete = userData?.profile?.isComplete || false;
+
   return (
     <div className="space-y-8">
         <div>
-            <h1 className="text-3xl font-headline font-bold">Client Dashboard</h1>
+            <h1 className="text-3xl font-headline font-bold">
+              Welcome back, {companyName}!
+            </h1>
             <p className="text-muted-foreground">Here's an overview of your activity on Hirefy.</p>
         </div>
 
@@ -52,6 +65,25 @@ export default function ClientDashboard() {
                 description="Lifetime spending on projects."
             />
         </div>
+
+        {!profileComplete && (
+          <Card className="bg-orange-50 border-orange-200">
+              <CardHeader className="flex flex-row items-center gap-4">
+                  <AlertCircle className="h-6 w-6 text-orange-600" />
+                  <div>
+                      <CardTitle className="text-orange-900">Complete Your Company Profile</CardTitle>
+                      <CardDescription className="text-orange-700">
+                        Add more details about your company to attract the best IT professionals.
+                      </CardDescription>
+                  </div>
+              </CardHeader>
+              <CardContent>
+                  <Button asChild variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-100">
+                      <Link href="/register/client-details">Complete Profile Now</Link>
+                  </Button>
+              </CardContent>
+          </Card>
+        )}
 
         <Separator />
         

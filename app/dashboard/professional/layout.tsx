@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useAuth, type UserData } from '@/context/AuthContext';
@@ -18,12 +17,16 @@ const ProfessionalSidebar = () => {
         { href: '/dashboard/professional/find-jobs', label: 'Find Jobs', icon: Search },
         { href: '/dashboard/professional/manage-jobs', label: 'My Jobs', icon: Briefcase },
         { href: '/dashboard/professional/messages', label: 'Messages', icon: MessageSquare },
-        { href: '/dashboard/professional/profile', 'label': 'My Profile', icon: User },
+        { href: '/dashboard/professional/profile', label: 'My Profile', icon: User },
         { href: '/dashboard/professional/settings', label: 'Settings', icon: Settings },
     ];
 
     return (
         <Sidebar>
+            <div className="px-4 py-6 border-b">
+                <h2 className="text-lg font-bold font-headline">Professional</h2>
+                <p className="text-sm text-muted-foreground">Dashboard</p>
+            </div>
             <SidebarMenu>
                 {menuItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
@@ -35,7 +38,7 @@ const ProfessionalSidebar = () => {
                             }}
                          >
                             <Link href={item.href}>
-                                <item.icon />
+                                <item.icon className="h-5 w-5" />
                                 <span>{item.label}</span>
                             </Link>
                         </SidebarMenuButton>
@@ -82,14 +85,12 @@ export default function ProfessionalLayout({ children }: { children: React.React
 
   return (
       <SidebarProvider>
-        <div className="flex">
-            <ProfessionalSidebar />
-            <SidebarInset>
-                <div className="p-4 md:p-8 w-full">
-                    {children}
-                </div>
-            </SidebarInset>
-        </div>
+        <ProfessionalSidebar />
+        <SidebarInset>
+            <div className="p-4 md:p-8 w-full">
+                {children}
+            </div>
+        </SidebarInset>
       </SidebarProvider>
   );
 }
