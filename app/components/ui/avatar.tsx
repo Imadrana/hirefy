@@ -1,5 +1,5 @@
 // -------------------------------
-//  Developer Reference Notes
+// Developer Reference Notes
 // -------------------------------
 //
 // Project: Hirefy – On-Demand IT Service Platform
