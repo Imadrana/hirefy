@@ -1,3 +1,45 @@
+// -------------------------------
+// Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: app/components/ui   File: Select.tsx
+//
+// Description:
+// - Reusable custom Select component for dropdowns
+// - Built using Radix UI Select primitives and TailwindCSS
+// - Includes scroll buttons, labels, separators, and item selection icons
+// - Accessible, keyboard-navigable, and supports animations
+//
+// Technical Understanding & Research Summary:
+// - Studied Radix Select documentation: https://www.radix-ui.com/docs/primitives/components/select
+// - Implemented scroll buttons using Radix primitives (ScrollUpButton, ScrollDownButton)
+// - Used `forwardRef` to enable composability and ref access
+// - Applied `lucide-react` icons (ChevronDown, ChevronUp, Check) for UI consistency
+//
+// References / Tutorials:
+// • Radix UI Select: https://www.radix-ui.com/docs/primitives/components/select  
+// • React forwardRef: https://react.dev/reference/react/forwardRef  
+// • TailwindCSS Utilities: https://tailwindcss.com/docs  
+// • Lucide React Icons: https://lucide.dev/icons/
+//
+// -------------------------------
+// ChatGPT Prompt Used
+// -------------------------------
+//
+// "Build a reusable Select (dropdown) component using Radix UI for my Hirefy project. 
+// It should include triggers, items, labels, separators, scroll buttons, and icons. 
+// The design should be responsive and consistent with other UI components styled with TailwindCSS."
+//
+// -------------------------------
+// Summary:
+// - Language: TypeScript / TSX (React)
+// - Side: Frontend Component (Client-side)
+// - Libraries Used: React, @radix-ui/react-select, Lucide Icons, TailwindCSS
+// - Purpose: Provide a custom dropdown UI for user selection (e.g., categories, filters, etc.)
+// -------------------------------
 "use client"
 
 import * as React from "react"
@@ -7,9 +49,7 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const Select = SelectPrimitive.Root
-
 const SelectGroup = SelectPrimitive.Group
-
 const SelectValue = SelectPrimitive.Value
 
 const SelectTrigger = React.forwardRef<
@@ -38,10 +78,7 @@ const SelectScrollUpButton = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.ScrollUpButton
     ref={ref}
-    className={cn(
-      "flex cursor-default items-center justify-center py-1",
-      className
-    )}
+    className={cn("flex cursor-default items-center justify-center py-1", className)}
     {...props}
   >
     <ChevronUp className="h-4 w-4" />
@@ -55,17 +92,13 @@ const SelectScrollDownButton = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.ScrollDownButton
     ref={ref}
-    className={cn(
-      "flex cursor-default items-center justify-center py-1",
-      className
-    )}
+    className={cn("flex cursor-default items-center justify-center py-1", className)}
     {...props}
   >
     <ChevronDown className="h-4 w-4" />
   </SelectPrimitive.ScrollDownButton>
 ))
-SelectScrollDownButton.displayName =
-  SelectPrimitive.ScrollDownButton.displayName
+SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName
 
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
@@ -128,7 +161,6 @@ const SelectItem = React.forwardRef<
         <Check className="h-4 w-4" />
       </SelectPrimitive.ItemIndicator>
     </span>
-
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
   </SelectPrimitive.Item>
 ))
