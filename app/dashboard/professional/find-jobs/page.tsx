@@ -1,3 +1,41 @@
+/*Create a Next.js 13 (App Router) page using TypeScript, React, and Tailwind CSS (with shadcn/ui components) called FindJobsPage.
+
+The page should display a list of freelance job postings inside cards, each showing:
+
+Job title
+
+Client name and avatar
+
+Short description (clamped to 3 lines)
+
+Required skills as badges
+
+Budget and duration (with icons)
+
+Buttons for “View Details” and “Submit Proposal”
+
+At the top, include a search bar and a dropdown filter for skills (both functional).
+
+Requirements:
+
+Use Lucide-react icons (Search, Tag, DollarSign, Clock, FileText, etc.)
+
+Use shadcn/ui components like Card, Badge, Button, Input, Select, and Avatar.
+
+Use a local mock dataset of 4–5 jobs with fields:
+id, title, clientName, clientAvatar, description, skills, budget, duration, and datePosted.
+
+Filtering logic:
+
+Text search filters by job title (case-insensitive).
+
+Skill filter shows jobs matching the selected skill, or all if “All Skills” is selected.
+
+Show a “No jobs found” message if nothing matches.
+
+Layout should be responsive (2-column grid on large screens, 1-column on mobile).
+
+Include full working code with imports at the top.*/
 'use client';
 
 import { useState } from "react";
