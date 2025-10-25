@@ -1,3 +1,45 @@
+// -------------------------------
+// Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: app/components/ui   File: Dialog.tsx
+//
+// Description:
+// - Custom Dialog component for modals and pop-ups
+// - Built using Radix UI Dialog primitives integrated with TailwindCSS
+// - Includes reusable subcomponents: DialogHeader, DialogFooter, DialogTitle, DialogDescription
+// - Supports smooth animations and accessibility for opening/closing states
+//
+// Technical Understanding & Research Summary:
+// - Studied Radix Dialog documentation: https://www.radix-ui.com/docs/primitives/components/dialog
+// - Learned to use `forwardRef` for component composition
+// - Integrated Lucide icons (X) for modal close functionality
+// - Applied TailwindCSS transitions and utility classes for motion effects
+//
+// References / Tutorials:
+// • Radix UI Dialog: https://www.radix-ui.com/docs/primitives/components/dialog  
+// • React forwardRef: https://react.dev/reference/react/forwardRef  
+// • TailwindCSS Utilities: https://tailwindcss.com/docs  
+// • Lucide React Icons: https://lucide.dev/icons/
+//
+// -------------------------------
+// ChatGPT Prompt Used
+// -------------------------------
+//
+// "Create a reusable Dialog component for my Hirefy project using Radix UI Dialog primitives. 
+// It should include overlay, content, header, footer, title, and description sections, 
+// and support accessibility and animations. Style it with TailwindCSS and include a close button icon."
+//
+// -------------------------------
+// Summary:
+// - Language: TypeScript / TSX (React)
+// - Side: Frontend Component (Client-side)
+// - Libraries Used: React, @radix-ui/react-dialog, Lucide Icons, TailwindCSS
+// - Purpose: Display pop-up modals and overlay dialogs for forms, messages, etc.
+// -------------------------------
 "use client"
 
 import * as React from "react"
@@ -7,11 +49,8 @@ import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const Dialog = DialogPrimitive.Root
-
 const DialogTrigger = DialogPrimitive.Trigger
-
 const DialogPortal = DialogPrimitive.Portal
-
 const DialogClose = DialogPrimitive.Close
 
 const DialogOverlay = React.forwardRef<
@@ -87,10 +126,7 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
-      className
-    )}
+    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
     {...props}
   />
 ))
