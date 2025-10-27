@@ -1,4 +1,34 @@
+/*Create a React/Next.js page for managing jobs using TailwindCSS and shadcn/ui components. The page should display a table of jobs with columns: Job Title, Client, Job Status, Payment Status, and Actions.
 
+Requirements:
+
+Use Card, Table, Badge, Button, and DropdownMenu components from shadcn/ui.
+
+Jobs data should be stored in a constant array of objects, each containing: id, title, client, status, and paymentStatus.
+
+The Job Status and Payment Status should have badges with different variants depending on their value (Active, Completed, Proposal Submitted, Invitation, Funded, Paid, N/A).
+
+Actions column should have a dropdown menu with:
+
+"View Job Details"
+
+"Contact Client"
+
+Conditional actions:
+
+If status is "Invitation", show "Submit Proposal"
+
+If status is "Active", show "Mark as Complete"
+
+Use lucide-react icons: Briefcase, MoreHorizontal, Eye, MessageSquare, CheckCircle, FileText.
+
+Make the table responsive: hide "Client" and "Payment Status" columns on small screens.
+
+Include a header with a title and description.
+
+Export the component as default from the page.
+
+Generate the full functional React component with all imports, JSX structure, and logic for mapping jobs and handling badge variants.*/
 import {
   Table,
   TableBody,

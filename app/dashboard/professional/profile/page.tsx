@@ -1,4 +1,50 @@
+/*Create a Next.js "use client" page called ProfessionalProfilePage that allows users to view and edit their professional profile. Use React Hook Form with Zod validation, shadcn/ui components, and TailwindCSS.
 
+Requirements:
+
+Include a profile form with sections:
+
+Profile Summary: avatar, full name, title, bio
+
+Contact & Rate: email, phone, location, hourly rate
+
+Skills: comma-separated list with badges when not editing
+
+Work Experience: dynamic array with fields for title, company, start/end date, description
+
+Education: dynamic array with fields for degree, institution, year
+
+Certifications: textarea, display as list when not editing
+
+Use useState for isEditing and loading.
+
+Use useForm and useFieldArray from react-hook-form to manage dynamic arrays.
+
+Use zod schemas to validate:
+
+fullName, title, email, phone, location, bio, skills, hourlyRate
+
+Array of work experience objects with title, company, startDate, endDate, description
+
+Array of education objects with degree, institution, year
+
+Provide mock data for the profile with avatar, work experience, education, skills, certifications, and other fields.
+
+Include buttons for editing, saving, and canceling with proper loading states and icons (Edit, Save, Loader2).
+
+For work experience and education arrays, provide Add and Remove buttons with proper icons (PlusCircle, Trash2).
+
+Use Form, FormField, FormItem, FormLabel, FormControl, FormMessage from shadcn/ui/form.
+
+Include TailwindCSS layout and styling: responsive grids, spacing, cards, separators, badges for skills.
+
+Use lucide-react icons for avatar section, contact info, education, work experience, and actions (User, Upload, Mail, Phone, MapPin, Star, Briefcase, GraduationCap, Award).
+
+Implement toast notification on save using useToast.
+
+Export the component as default.
+
+Generate the full functional component code including all imports, JSX structure, state handling, form submission logic, and dynamic arrays for work experience and education.*/
 'use client';
 
 import { useState } from 'react';

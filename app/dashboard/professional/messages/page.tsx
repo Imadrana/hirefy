@@ -1,3 +1,58 @@
+/*Create a Next.js "use client" page called MessagesPage that implements a messaging interface for communicating with clients. Use React, TailwindCSS, shadcn/ui components, and lucide-react icons.
+
+Requirements:
+
+Maintain a list of conversations in a constant array with fields:
+
+id, clientId, clientName, clientAvatar, lastMessage, lastMessageTimestamp, unreadCount, messages (array of {id, sender, text, timestamp})
+
+Use state hooks:
+
+selectedConversationId to track the active conversation
+
+searchTerm for filtering conversations
+
+newMessage for the message input
+
+Include a conversation list panel on the left:
+
+Search bar with a Search icon
+
+Scrollable list of conversations
+
+Highlight the selected conversation
+
+Show client avatar using Avatar, unread message badge, last message, and timestamp
+
+Include a message view panel on the right:
+
+Header with client avatar and name
+
+Scrollable message history
+
+Messages aligned left/right based on sender (You vs client)
+
+Messages styled with background colors (bg-primary for your messages)
+
+Show timestamp below each message
+
+Include input box at bottom to type and send new messages:
+
+Input field and Button with Send icon
+
+On submit, add new message to selected conversation and update lastMessage
+
+Use cn utility for conditional classNames
+
+Provide placeholder avatars for clients and fallback initials
+
+Show a default empty state when no conversation is selected
+
+Make the layout responsive with Card container, split 1/3 for conversation list and 2/3 for message view
+
+Include all relevant lucide-react icons: MessageSquare, Search, Send
+
+Generate the complete functional component code, including all imports, JSX structure, state management, search filter, message sending logic, and Tailwind styling.*/
 'use client';
 
 import { useState } from 'react';
