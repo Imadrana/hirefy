@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { Google } from 'lucide-react';
+import { FcGoogle } from 'react-icons/fc';
 
 export function GoogleSignInButton() {
   const [loading, setLoading] = useState(false);
@@ -48,7 +48,9 @@ export function GoogleSignInButton() {
         'Signing in...'
       ) : (
         <>
-          <Google className="mr-2 h-5 w-5" />
+          <span className="mr-2 inline-flex">
+            <FcGoogle size={20} />
+          </span>
           Sign in with Google
         </>
       )}
