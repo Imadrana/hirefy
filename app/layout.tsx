@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import './globals.css';
-import { AuthProvider } from './context/AuthContext';
-import Navbar from './components/Navbar';
-import { Toaster } from './components/ui/toaster';
+import '@/app/globals.css';  // Ensure this path is correct
+import { AuthProvider } from '@/context/AuthContext';
+import Navbar from '@/components/Navbar';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'Hirefy',

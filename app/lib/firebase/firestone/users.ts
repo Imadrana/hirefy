@@ -1,6 +1,27 @@
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { User, ClientProfile, ProfessionalProfile } from './types';
+
+export type ClientProfile = {
+  name?: string;
+  // add other client-specific fields as needed
+  [key: string]: any;
+};
+
+export type ProfessionalProfile = {
+  name?: string;
+  skills?: string[];
+  // add other professional-specific fields as needed
+  [key: string]: any;
+};
+
+export type User = {
+  uid: string;
+  email?: string;
+  profile?: ClientProfile | ProfessionalProfile;
+  createdAt?: string;
+  // allow extra fields stored in Firestore
+  [key: string]: any;
+};
 
 export const createUser = async (user: User) => {
   try {

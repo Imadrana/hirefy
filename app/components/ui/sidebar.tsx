@@ -133,7 +133,7 @@ export const SidebarMenuButton = React.forwardRef<
           className
         ),
         title: !open && tooltip ? String(tooltip.children) : undefined,
-      })
+      } as any)
     )
   }
 

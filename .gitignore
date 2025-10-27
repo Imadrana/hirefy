@@ -35,10 +35,9 @@ yarn-error.log*
 
 # Environment variables - DO NOT COMMIT
 .env.local
-.env*.local
-.env
-# vercel
-.vercel
+.env.development.local
+.env.test.local
+.env.production.local
 
 # typescript
 *.tsbuildinfo
