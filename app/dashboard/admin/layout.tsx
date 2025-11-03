@@ -28,13 +28,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   useEffect(() => {
-    if (!loading && userData && userData.role !== 'admin') {
-      toast({
-        variant: 'destructive',
-        title: 'Access Denied',
-        description: 'You do not have permission to view this page.',
-      });
-      router.push(getRedirectPath(userData));
+    if (!loading && (!userData || userData.role !== 'admin')) {
+      const redirectPath = getRedirectPath(userData);
+      
+      // Only show "Access Denied" if user has a different role (not when logging out)
+      // If userData is null, they're logged out, so just redirect silently
+      if (userData && userData.role !== 'admin') {
+        toast({
+          variant: 'destructive',
+          title: 'Access Denied',
+          description: 'You do not have permission to view this page.',
+        });
+      }
+      
+      router.push(redirectPath);
     }
   }, [userData, loading, router, toast]);
 
