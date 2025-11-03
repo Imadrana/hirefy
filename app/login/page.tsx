@@ -38,12 +38,12 @@ Include a link to the registration page below the form that says “Don’t have
 Make sure to use proper TypeScript types for the form schema and form data.
 
 Please include the full working component code — imports, form logic, UI layout, and Firebase integration.*/
-'use client';
+"use client";
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -53,7 +53,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { auth, db } from '@/lib/firebase/firebase';
-import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import Link from 'next/link';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
@@ -62,10 +61,52 @@ const formSchema = z.object({
   password: z.string().min(1, { message: 'Password is required.' }),
 });
 
+interface UserData {
+  email: string | null;
+  role: string;
+  createdAt: string;
+  uid: string;
+  isNew?: boolean;
+}
+
+const ensureUserDocument = async (user: { uid: string; email: string | null }): Promise<UserData> => {
+  const userDocRef = doc(db, 'users', user.uid);
+  const userDocSnap = await getDoc(userDocRef);
+
+  if (!userDocSnap.exists()) {
+    // Create new user document with default role
+    const userData: UserData = {
+      email: user.email,
+      role: 'client', // Default role
+      createdAt: new Date().toISOString(),
+      uid: user.uid,
+      isNew: true
+    };
+    await setDoc(userDocRef, userData);
+    return userData;
+  }
+
+  const existingData = userDocSnap.data() as Omit<UserData, 'isNew'>;
+  if (!existingData.role) {
+    // Add role if missing
+    const userData: UserData = {
+      ...existingData,
+      role: 'client',
+      isNew: false
+    };
+    await setDoc(userDocRef, userData, { merge: true });
+    return userData;
+  }
+
+  return {
+    ...existingData,
+    isNew: false
+  };
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { signInWithGoogle, loading: googleLoading } = useGoogleAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -82,151 +123,205 @@ export default function LoginPage() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
+
+      if (process.env.NODE_ENV === 'development') {
+        console.info('[login] Authenticated user:', { email: user.email, uid: user.uid });
+      }
+
+      // Create or update user document using the helper function
+      const userData = await ensureUserDocument(user);
       
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        const role = userData.role;
-
+      if (userData.isNew) {
         toast({
-          title: 'Login Successful',
-          description: `Welcome back! Redirecting to your dashboard...`,
+          title: 'Account Created',
+          description: 'Welcome! Your account has been set up.',
         });
+      }
 
-        if (role === 'admin') {
+      toast({
+        title: 'Login Successful',
+        description: 'Redirecting to your dashboard...',
+      });
+
+      switch (userData.role) {
+        case 'admin':
           router.push('/dashboard/admin');
-        } else if (role === 'professional') {
+          break;
+        case 'professional':
           router.push('/dashboard/professional');
-        } else {
+          break;
+        default:
           router.push('/dashboard/client');
-        }
-      } else {
-        await auth.signOut();
-        throw new Error('User data not found in database.');
+          break;
       }
     } catch (error: any) {
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('[login] auth/firestore error:', error);
+      }
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: error.code === 'auth/invalid-credential' ? 'Invalid email or password.' : (error.message || 'An unexpected error occurred.'),
+        description:
+          error.code === 'auth/invalid-credential'
+            ? 'Invalid email or password.'
+            : error.message || 'An unexpected error occurred.',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    await signInWithGoogle();
-  };
-
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-gray-50 p-4">
-      <Card className="w-full max-w-md shadow-lg animate-in fade-in-80">
-        <CardHeader>
-          <CardTitle className="text-2xl font-headline">Welcome Back to Hirefy</CardTitle>
-          <CardDescription>Enter your credentials to access your account.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="min-h-[calc(100vh-4rem)] w-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+      <div className="w-full max-w-md space-y-8">
+        {/* Header */}
+        <div className="text-center">
+          <div className="mx-auto h-20 w-20 rounded-full bg-gradient-to-tr from-red-500 via-red-600 to-orange-500 flex items-center justify-center shadow-lg ring-4 ring-red-500/20">
+            <svg
+              className="h-11 w-11 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+          </div>
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+            Welcome back
+          </h2>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            Sign in to your account to continue
+          </p>
+        </div>
+
+        {/* Form Card */}
+        <div className="mt-8 bg-white dark:bg-slate-900 py-8 px-6 shadow-xl rounded-2xl border border-gray-200 dark:border-slate-800 sm:px-10">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Email Field */}
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      Email address
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="you@example.com" {...field} autoComplete="email" />
+                      <Input
+                        {...field}
+                        type="email"
+                        autoComplete="email"
+                        placeholder="you@example.com"
+                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-slate-800 dark:border-slate-700 px-4 py-3 text-base"
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="mt-1 text-sm text-red-600 dark:text-red-400" />
                   </FormItem>
                 )}
               />
+
+              {/* Password Field */}
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      Password
+                    </FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Input type={showPassword ? 'text' : 'password'} placeholder="••••••••" {...field} autoComplete="current-password" />
-                        <Button
+                      <div className="relative mt-1">
+                        <Input
+                          {...field}
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete="current-password"
+                          placeholder="Enter your password"
+                          className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-slate-800 dark:border-slate-700 px-4 py-3 pr-12 text-base"
+                        />
+                        <button
                           type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute inset-y-0 right-0 h-full text-muted-foreground hover:text-foreground"
                           onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                           tabIndex={-1}
                         >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
+                          {showPassword ? (
+                            <EyeOff className="h-5 w-5" />
+                          ) : (
+                            <Eye className="h-5 w-5" />
+                          )}
+                        </button>
                       </div>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="mt-1 text-sm text-red-600 dark:text-red-400" />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full font-bold" disabled={loading || googleLoading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Login
-              </Button>
+
+              {/* Submit Button */}
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-semibold text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                      Signing in...
+                    </>
+                  ) : (
+                    'Sign in'
+                  )}
+                </Button>
+              </div>
             </form>
           </Form>
 
           {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300 dark:border-slate-700" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white dark:bg-slate-900 text-gray-500 dark:text-gray-400 font-medium">
+                  New to Hirefy?
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Google Sign-In Button */}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full font-bold"
-            onClick={handleGoogleSignIn}
-            disabled={loading || googleLoading}
-          >
-            {googleLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+          {/* Sign Up Link */}
+          <div className="mt-6 text-center">
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300 transition-colors group"
+            >
+              Create your account
+              <svg
+                className="h-4 w-4 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+              >
                 <path
-                  fill="currentColor"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="currentColor"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
                 />
               </svg>
-            )}
-            Sign in with Google
-          </Button>
-
-          <div className="mt-4 text-center text-sm">
-            Don't have an account?{' '}
-            <Link href="/register" className="underline text-primary hover:text-primary/80 transition-colors">
-              Register here
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
