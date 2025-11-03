@@ -9,72 +9,209 @@ After a separator, include two larger cards: one for “Recent Activity” showi
 The design should look clean, responsive, and professional with clear spacing, rounded corners, and a friendly dashboard layout.*/
 'use client';
 
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, type UserData } from '@/context/AuthContext'; // Ensure 'type UserData' is available if used elsewhere
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Briefcase, User, Activity, AlertCircle } from "lucide-react";
+import { Search, Briefcase, User, Activity, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
+import React, { useEffect, useState } from 'react'; // Import React for explicit type usage
+import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase/firebase';
 
-const StatCard = ({ icon, title, value, description }: { icon: React.ReactNode, title: string, value: string, description: string }) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      {icon}
-    </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
-      <p className="text-xs text-muted-foreground">{description}</p>
-    </CardContent>
-  </Card>
-);
+// Define the interface for StatCard props for cleaner TypeScript
+interface StatCardProps {
+    icon: React.ReactNode;
+    title: string;
+    value: string;
+    description: string;
+    href?: string;
+}
 
+// Refactored StatCard component with explicit FC typing
+const StatCard: React.FC<StatCardProps> = ({ icon, title, value, description, href }) => {
+  const cardContent = (
+    <Card className={href ? 'hover:shadow-md transition-shadow cursor-pointer h-full' : 'h-full'}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </CardContent>
+    </Card>
+  );
+  
+  return href ? (
+    <Link href={href} className="block">
+      {cardContent}
+    </Link>
+  ) : (
+    cardContent
+  );
+};
+
+interface DashboardStats {
+  activeJobs: number;
+  totalJobs: number;
+  pendingProposals: number;
+  acceptedProposals: number;
+}
+
+interface RecentActivity {
+  id: string;
+  type: 'proposal' | 'job' | 'message';
+  title: string;
+  description: string;
+  timestamp: any;
+}
 
 export default function ProfessionalDashboard() {
-  const { userData } = useAuth();
+  const { userData, user } = useAuth();
+  const [stats, setStats] = useState<DashboardStats>({
+    activeJobs: 0,
+    totalJobs: 0,
+    pendingProposals: 0,
+    acceptedProposals: 0,
+  });
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [loading, setLoading] = useState(true);
   
-  // Extract user's display name from userData
-  const displayName = userData?.displayName || userData?.email?.split('@')[0] || 'Professional';
+  // Extract user's display name, safely defaulting if parts are null
+  const displayName = (() => {
+    if (!userData) return 'Professional';
+    if ('displayName' in userData && typeof (userData as any).displayName === 'string') {
+      return (userData as any).displayName;
+    }
+    if ('name' in userData && typeof (userData as any).name === 'string') {
+      return (userData as any).name;
+    }
+    if ('profile' in userData && userData.profile && 'fullName' in userData.profile && typeof (userData.profile as any).fullName === 'string') {
+      return (userData.profile as any).fullName;
+    }
+    if ('email' in userData && typeof userData.email === 'string') {
+      return userData.email.split('@')[0];
+    }
+    return 'Professional';
+  })();
   
-  // Check if profile is complete (you can customize this logic)
-  const profileComplete = userData?.profile?.isComplete || false;
+  // Check if profile is complete. Use a runtime type guard to handle unions where only some profiles have isComplete.
+  let profileComplete = false;
+  if (userData?.profile && 'isComplete' in userData.profile) {
+    profileComplete = (userData.profile as { isComplete: boolean }).isComplete ?? false;
+  }
+
+  // Fetch dashboard statistics
+  useEffect(() => {
+    if (!user) return;
+
+    // Fetch proposals
+    const proposalsQuery = query(
+      collection(db, 'proposals'),
+      where('professionalId', '==', user.uid)
+    );
+
+    const unsubscribe = onSnapshot(proposalsQuery, (snapshot) => {
+      const proposals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const pendingProposals = proposals.filter((prop: any) => prop.status === 'pending').length;
+      const acceptedProposals = proposals.filter((prop: any) => prop.status === 'accepted').length;
+
+      setStats(prev => ({
+        ...prev,
+        totalJobs: acceptedProposals,
+        activeJobs: acceptedProposals,
+        pendingProposals,
+        acceptedProposals,
+      }));
+
+      // Create recent activities from proposals
+      const proposalActivities: RecentActivity[] = proposals
+        .slice(0, 5)
+        .map((prop: any) => ({
+          id: prop.id,
+          type: 'proposal' as const,
+          title: prop.status === 'accepted' 
+            ? `You were hired for '${prop.jobTitle}'`
+            : `Proposal submitted for '${prop.jobTitle}'`,
+          description: prop.status === 'accepted'
+            ? `Proposal accepted`
+            : `Status: ${prop.status}`,
+          timestamp: prop.updatedAt || prop.createdAt,
+        }));
+
+      setRecentActivities(proposalActivities);
+      setLoading(false);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [user]);
+
+  const getTimeAgo = (timestamp: any): string => {
+    if (!timestamp) return 'Recently';
+    
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
+    return `${Math.floor(seconds / 604800)} weeks ago`;
+  };
 
   return (
     <div className="space-y-8">
         <div>
             <h1 className="text-3xl font-headline font-bold">
-              Welcome back, {displayName}!
+              Welcome back, {displayName}! 
             </h1>
             <p className="text-muted-foreground">Here's a summary of your activity on Hirefy.</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard 
-                icon={<Briefcase className="h-4 w-4 text-muted-foreground" />}
-                title="Active Jobs"
-                value="2"
-                description="Projects you are currently working on."
-            />
-            <StatCard 
-                icon={<Search className="h-4 w-4 text-muted-foreground" />}
-                title="Invitations"
-                value="5"
-                description="New invitations to apply for jobs."
-            />
-             <StatCard 
-                icon={<User className="h-4 w-4 text-muted-foreground" />}
-                title="Profile Views"
-                value="42"
-                description="Total views this month."
-            />
-            <StatCard 
-                icon={<Activity className="h-4 w-4 text-muted-foreground" />}
-                title="Active Proposals"
-                value="7"
-                description="Proposals awaiting client response."
-            />
-        </div>
+        {/* --- Stats Grid --- */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Loading dashboard...</span>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatCard 
+                  icon={<Briefcase className="h-4 w-4 text-muted-foreground" />}
+                  title="Active Jobs"
+                  value={stats.activeJobs.toString()}
+                  description="Projects you are currently working on."
+                  href="/dashboard/professional/manage-jobs"
+              />
+              <StatCard 
+                  icon={<Search className="h-4 w-4 text-muted-foreground" />}
+                  title="Total Jobs"
+                  value={stats.totalJobs.toString()}
+                  description="Total accepted proposals."
+                  href="/dashboard/professional/manage-jobs"
+              />
+              <StatCard 
+                  icon={<User className="h-4 w-4 text-muted-foreground" />}
+                  title="Accepted Proposals"
+                  value={stats.acceptedProposals.toString()}
+                  description="Proposals that were accepted."
+                  href="/dashboard/professional/manage-jobs"
+              />
+              <StatCard 
+                  icon={<Activity className="h-4 w-4 text-muted-foreground" />}
+                  title="Pending Proposals"
+                  value={stats.pendingProposals.toString()}
+                  description="Proposals awaiting client response."
+                  href="/dashboard/professional/find-jobs"
+              />
+          </div>
+        )}
         
+        {/* --- Profile Completion Alert --- */}
         {!profileComplete && (
           <Card className="bg-destructive/5 border-destructive/20">
               <CardHeader className="flex flex-row items-center gap-4">
@@ -94,6 +231,7 @@ export default function ProfessionalDashboard() {
 
         <Separator />
         
+        {/* --- Activity and CTA Section --- */}
         <div className="grid md:grid-cols-2 gap-8">
             <Card>
                 <CardHeader>
@@ -101,29 +239,34 @@ export default function ProfessionalDashboard() {
                     <CardDescription>Keep track of recent events and updates.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-4">
-                        <div className="flex items-start gap-4">
-                            <Activity className="h-5 w-5 text-primary mt-1" />
-                            <div>
-                                <p className="font-medium">New message from Innovate Inc.</p>
-                                <p className="text-sm text-muted-foreground">Regarding 'Mobile App API' - 1 hour ago</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-4">
-                            <Activity className="h-5 w-5 text-primary mt-1" />
-                            <div>
-                                <p className="font-medium">You were hired for 'Database Migration'.</p>
-                                <p className="text-sm text-muted-foreground">By Tech Solutions Ltd. - 1 day ago</p>
-                            </div>
-                        </div>
-                         <div className="flex items-start gap-4">
-                            <Activity className="h-5 w-5 text-primary mt-1" />
-                            <div>
-                                <p className="font-medium">New job posting matches your skills.</p>
-                                <p className="text-sm text-muted-foreground">'Senior Cloud Engineer' - 2 days ago</p>
-                            </div>
-                        </div>
-                    </div>
+                    {loading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : recentActivities.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>No recent activity yet.</p>
+                        <p className="text-sm mt-1">Start by submitting proposals!</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                          {recentActivities.map((activity) => (
+                            <Link 
+                              key={activity.id} 
+                              href="/dashboard/professional/manage-jobs"
+                              className="flex items-start gap-4 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                            >
+                                <Activity className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">{activity.title}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {activity.description} - {getTimeAgo(activity.timestamp)}
+                                    </p>
+                                </div>
+                            </Link>
+                          ))}
+                      </div>
+                    )}
                 </CardContent>
             </Card>
              <Card className="bg-primary/5 border-primary/20">
