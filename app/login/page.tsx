@@ -37,7 +37,8 @@ Include a link to the registration page below the form that says “Don’t have
 
 Make sure to use proper TypeScript types for the form schema and form data.
 
-Please include the full working component code — imports, form logic, UI layout, and Firebase integration.*/
+Please include the full working component code — imports, form logic, UI layout, and Firebase integration.
+*/
 "use client";
 
 import { useState } from 'react';
