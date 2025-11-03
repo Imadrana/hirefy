@@ -7,6 +7,7 @@ If the user’s profile is incomplete (userData.profile.isComplete === false), s
 After a separator, include two larger cards: one for “Recent Activity” showing sample updates with timestamps, and another encouraging the user to “Find New Jobs,” with a button linking to /dashboard/professional/find-jobs.
 
 The design should look clean, responsive, and professional with clear spacing, rounded corners, and a friendly dashboard layout.*/
+//Updated admin/proffessional/page.tsx
 'use client';
 
 import { useAuth, type UserData } from '@/context/AuthContext'; // Ensure 'type UserData' is available if used elsewhere
