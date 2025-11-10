@@ -1,58 +1,37 @@
-/*Create a Next.js "use client" page called MessagesPage that implements a messaging interface for communicating with clients. Use React, TailwindCSS, shadcn/ui components, and lucide-react icons.
-
-Requirements:
-
-Maintain a list of conversations in a constant array with fields:
-
-id, clientId, clientName, clientAvatar, lastMessage, lastMessageTimestamp, unreadCount, messages (array of {id, sender, text, timestamp})
-
-Use state hooks:
-
-selectedConversationId to track the active conversation
-
-searchTerm for filtering conversations
-
-newMessage for the message input
-
-Include a conversation list panel on the left:
-
-Search bar with a Search icon
-
-Scrollable list of conversations
-
-Highlight the selected conversation
-
-Show client avatar using Avatar, unread message badge, last message, and timestamp
-
-Include a message view panel on the right:
-
-Header with client avatar and name
-
-Scrollable message history
-
-Messages aligned left/right based on sender (You vs client)
-
-Messages styled with background colors (bg-primary for your messages)
-
-Show timestamp below each message
-
-Include input box at bottom to type and send new messages:
-
-Input field and Button with Send icon
-
-On submit, add new message to selected conversation and update lastMessage
-
-Use cn utility for conditional classNames
-
-Provide placeholder avatars for clients and fallback initials
-
-Show a default empty state when no conversation is selected
-
-Make the layout responsive with Card container, split 1/3 for conversation list and 2/3 for message view
-
-Include all relevant lucide-react icons: MessageSquare, Search, Send
-
-Generate the complete functional component code, including all imports, JSX structure, state management, search filter, message sending logic, and Tailwind styling.*/
+// ---------------------------------------------
+// Developer Reference Notes
+// ---------------------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware
+// Members: Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar, Anandjit Kaur
+// File: app/messages/page.tsx
+//
+// Description:
+// This page builds the main messaging interface between professionals and clients.
+// It uses React with Firebase Firestore to send and receive messages in real time.
+// The layout includes a searchable conversation list on the left and a chat window on the right.
+// Each conversation and message updates instantly using Firestore’s snapshot listener.
+// The UI is styled using TailwindCSS and components from shadcn/ui, with lucide-react icons for visuals.
+//
+// Development Process & Key Learnings:
+// - I learned how to set up and manage real-time listeners in Firestore to reflect message updates instantly.
+// - Implemented conditional rendering and className logic using the cn() utility for cleaner UI control.
+// - Practiced breaking down large UI sections into smaller parts like the ScrollArea, Input, and Card layouts.
+// - Worked on message alignment logic (left/right) to improve readability and UX.
+// - Gained more understanding of managing component state and scroll behavior with useEffect and useRef hooks.
+// - Focused on making the layout responsive and keeping it consistent with the rest of the Hirefy dashboard.
+//
+// References & Resources Used:
+// • Firebase Firestore (real-time updates): https://firebase.google.com/docs/firestore/query-data/listen  
+// • shadcn/ui Component Library: https://ui.shadcn.com  
+// • Lucide React Icon Set: https://lucide.dev/icons  
+// • TailwindCSS Documentation: https://tailwindcss.com/docs  
+// • React useEffect & useRef Hooks Guide: https://react.dev/reference/react  
+//
+// Overall, this was one of the more interactive components I’ve worked on so far.
+// It helped me understand how real-time chat systems are structured and how UI updates can sync smoothly
+// with backend changes using Firebase.
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
