@@ -1,0 +1,105 @@
+mutation CreateSeedData @transaction @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  user_insertMany(data: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      bio: "Example bio for user1",
+      companyName: "Example Company 1",
+      createdAt: "2024-04-26T12:00:00Z",
+      displayName: "demouser1",
+      email: "demouser1@example.com",
+      passwordHash: "hashed_password_1",
+      photoUrl: "http://example.com/photo1.jpg",
+      userType: "client"
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      bio: "Example bio for user2",
+      companyName: "Example Company 2",
+      createdAt: "2024-04-26T13:00:00Z",
+      displayName: "demouser2",
+      email: "demouser2@example.com",
+      passwordHash: "hashed_password_2",
+      photoUrl: "http://example.com/photo2.jpg",
+      userType: "developer"
+    }
+  ])
+  skill_insertMany(data: [
+    {
+      id: "650e8400-e29b-41d4-a716-446655440000",
+      createdAt: "2024-04-26T12:30:00Z",
+      name: "GraphQL"
+    },
+    {
+      id: "650e8400-e29b-41d4-a716-446655440001",
+      createdAt: "2024-04-26T13:30:00Z",
+      name: "Firebase"
+    }
+  ])
+  project_insertMany(data: [
+    {
+      id: "750e8400-e29b-41d4-a716-446655440000",
+      clientId: "550e8400-e29b-41d4-a716-446655440000",
+      budget: 5000.00,
+      createdAt: "2024-04-27T10:00:00Z",
+      deadline: "2024-05-27",
+      description: "Example project description",
+      status: "open",
+      title: "Example Project"
+    }
+  ])
+  projectRequiredSkill_insertMany(data: [
+    {
+      projectId: "750e8400-e29b-41d4-a716-446655440000",
+      skillId: "650e8400-e29b-41d4-a716-446655440000"
+    }
+  ])
+  developerProfile_insertMany(data: [
+    {
+      id: "850e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      availabilityStatus: "available",
+      description: "Example developer profile",
+      hourlyRate: 60.00,
+      yearsOfExperience: 5
+    }
+  ])
+  developerSkill_insertMany(data: [
+    {
+      developerProfileId: "850e8400-e29b-41d4-a716-446655440000",
+      skillId: "650e8400-e29b-41d4-a716-446655440000"
+    }
+  ])
+  application_insertMany(data: [
+    {
+      id: "950e8400-e29b-41d4-a716-446655440000",
+      developerProfileId: "850e8400-e29b-41d4-a716-446655440000",
+      projectId: "750e8400-e29b-41d4-a716-446655440000",
+      createdAt: "2024-04-28T10:00:00Z",
+      proposalText: "Example application proposal",
+      proposedRate: 55.00,
+      status: "pending"
+    }
+  ])
+  message_insertMany(data: [
+    {
+      id: "a50e8400-e29b-41d4-a716-446655440000",
+      projectId: "750e8400-e29b-41d4-a716-446655440000",
+      receiverId: "550e8400-e29b-41d4-a716-446655440001",
+      senderId: "550e8400-e29b-41d4-a716-446655440000",
+      content: "Example message content",
+      createdAt: "2024-04-28T11:00:00Z"
+    }
+  ])
+  review_insertMany(data: [
+    {
+      id: "b50e8400-e29b-41d4-a716-446655440000",
+      projectId: "750e8400-e29b-41d4-a716-446655440000",
+      reviewedUserId: "550e8400-e29b-41d4-a716-446655440001",
+      reviewerId: "550e8400-e29b-41d4-a716-446655440000",
+      createdAt: "2024-04-29T10:00:00Z",
+      rating: 4,
+      reviewText: "Example review text",
+      reviewerRole: "client"
+    }
+  ])
+}
