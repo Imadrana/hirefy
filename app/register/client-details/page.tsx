@@ -176,10 +176,12 @@ export default function ClientDetailsPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Company Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Your Company Inc." {...field} /> {/* Binds value/onChange via {...field} */}
-                    </FormControl>
-                    <FormMessage /> {/* Displays validation error for this field */}
+                    <div className="relative">
+                      <FormControl>
+                        <Input placeholder="Your Company Inc." {...field} />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -192,9 +194,11 @@ export default function ClientDetailsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Street Address</FormLabel>
-                      <FormControl>
-                        <Input placeholder="123 Main St" {...field} />
-                      </FormControl>
+                      <div className="relative">
+                        <FormControl>
+                          <Input placeholder="123 Main St" {...field} />
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -205,9 +209,11 @@ export default function ClientDetailsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Calgary" {...field} />
-                      </FormControl>
+                      <div className="relative">
+                        <FormControl>
+                          <Input placeholder="Calgary" {...field} />
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -222,9 +228,11 @@ export default function ClientDetailsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Province</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Alberta" {...field} />
-                      </FormControl>
+                      <div className="relative">
+                        <FormControl>
+                          <Input placeholder="Alberta" {...field} />
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -235,9 +243,11 @@ export default function ClientDetailsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Postal Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="T2P 1J9" {...field} /> {/* Canadian postal code format */}
-                      </FormControl>
+                      <div className="relative">
+                        <FormControl>
+                          <Input placeholder="T2P 1J9" {...field} />
+                        </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -245,15 +255,17 @@ export default function ClientDetailsPage() {
               </div>
 
               {/* Business Type */}
-               <FormField
+              <FormField
                 control={form.control}
                 name="businessType"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type of Business</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Tech Startup, Retail, Non-profit" {...field} />
-                    </FormControl>
+                    <div className="relative">
+                      <FormControl>
+                        <Input placeholder="e.g., Tech Startup, Retail, Non-profit" {...field} />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -266,9 +278,11 @@ export default function ClientDetailsPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Company Description</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Briefly describe what your company does." {...field} rows={4} />
-                    </FormControl>
+                    <div className="relative">
+                      <FormControl>
+                        <Textarea placeholder="Briefly describe what your company does." {...field} rows={4} />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
