@@ -1,3 +1,11 @@
+/*"Create a Next.js + TypeScript + Tailwind + Shadcn UI component called ManageJobsPage.
+The component should display a list of job postings inside a card with a responsive table.
+Each row must include: job title, date posted, job status (with colored badge variants), number of proposals, and an actions dropdown (View, Edit, Close Posting).
+Use Shadcn components: Card, Table, Badge, Button, DropdownMenu.
+Use lucide-react icons: Briefcase, MoreHorizontal, Eye, Edit, Archive, FilePlus2.
+Include a header with a title, a subtitle, and a primary “Post New Job” button linking to /dashboard/client/post-job.
+Status badges should map to variants: Open = default, In Progress = secondary, Completed = outline, Closed = destructive.
+Use Tailwind classes for spacing and layout. Maintain the same structure and styling as a professional dashboard page.*/
 import {
   Table,
   TableBody,
