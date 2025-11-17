@@ -129,4 +129,4 @@ const JobCard = ({ job, onSubmitProposal }: JobCardProps) => (
 );
 
 export default function FindJobsPage() {
-  // ... rest of your code stays exactly the same
+  
