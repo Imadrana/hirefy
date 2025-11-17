@@ -8,30 +8,31 @@
 // File: app/messages/page.tsx
 //
 // Description:
-// This page builds the main messaging interface between professionals and clients.
+// This page implements the main messaging experience between professionals and clients.
 // It uses React with Firebase Firestore to send and receive messages in real time.
-// The layout includes a searchable conversation list on the left and a chat window on the right.
-// Each conversation and message updates instantly using Firestore’s snapshot listener.
-// The UI is styled using TailwindCSS and components from shadcn/ui, with lucide-react icons for visuals.
+// The layout is split into a searchable conversation list (left) and an active chat window (right).
+// Each conversation and message is kept in sync with Firestore using snapshot listeners.
+// The interface is styled with TailwindCSS and shadcn/ui components, and uses lucide-react icons.
 //
 // Development Process & Key Learnings:
-// - I learned how to set up and manage real-time listeners in Firestore to reflect message updates instantly.
-// - Implemented conditional rendering and className logic using the cn() utility for cleaner UI control.
-// - Practiced breaking down large UI sections into smaller parts like the ScrollArea, Input, and Card layouts.
-// - Worked on message alignment logic (left/right) to improve readability and UX.
-// - Gained more understanding of managing component state and scroll behavior with useEffect and useRef hooks.
-// - Focused on making the layout responsive and keeping it consistent with the rest of the Hirefy dashboard.
+// - Set up Firestore real-time listeners to automatically reflect new messages and updated conversations.
+// - Used the cn() utility to handle conditional classNames for active conversation highlighting and alignment.
+// - Practiced splitting the layout into logical sections: conversation list, message history, and input form.
+// - Implemented message alignment (left/right) based on senderId to clearly separate “you” vs “client” messages.
+// - Learned to manage scroll behavior with useRef and useEffect so the view scrolls to the latest message.
+// - Focused on making the messaging UI responsive while still matching the overall Hirefy dashboard look.
 //
 // References & Resources Used:
-// • Firebase Firestore (real-time updates): https://firebase.google.com/docs/firestore/query-data/listen  
-// • shadcn/ui Component Library: https://ui.shadcn.com  
-// • Lucide React Icon Set: https://lucide.dev/icons  
-// • TailwindCSS Documentation: https://tailwindcss.com/docs  
-// • React useEffect & useRef Hooks Guide: https://react.dev/reference/react  
+// • Firebase Firestore (real-time updates & listeners): https://firebase.google.com/docs/firestore/query-data/listen  
+// • Firestore data modeling for chat apps (conversations/messages): https://firebase.google.com/docs/firestore/solutions  
+// • shadcn/ui Component Library (Card, Input, Avatar, Button): https://ui.shadcn.com  
+// • Lucide React Icon Set (MessageSquare, Search, Send, Loader2): https://lucide.dev/icons  
+// • TailwindCSS Documentation (layout, borders, spacing): https://tailwindcss.com/docs  
+// • React Hooks (useEffect, useRef, useState): https://react.dev/reference/react  
 //
-// Overall, this was one of the more interactive components I’ve worked on so far.
-// It helped me understand how real-time chat systems are structured and how UI updates can sync smoothly
-// with backend changes using Firebase.
+// Overall, building this page gave me a better understanding of how real-time chat flows are wired up
+// end-to-end: from Firestore listeners to state updates to keeping the UI scrolled to the newest message.
+// ---------------------------------------------
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
