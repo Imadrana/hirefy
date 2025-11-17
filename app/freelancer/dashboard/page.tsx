@@ -1,3 +1,4 @@
+//This is the freelancer dashboard
 "use client";
 
 import React from "react"; //we import React by writing import React from "react";

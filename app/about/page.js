@@ -1,4 +1,4 @@
-"use client" // use the page to run on the browser side, not only server. make it able to use interactive features.
+"use client"
 
 import React from 'react';
 import { Users, Target, Award, Globe, Heart, Zap } from 'lucide-react'; // used for bringing up small pictures from lucide-react library.
