@@ -1,3 +1,26 @@
+/**
+ * ThemeToggle Component
+ *
+ * This component provides a user interface to toggle between light, dark, and system themes.
+ * It uses the `useTheme` hook from "next-themes" and a dropdown menu for selection.
+ *
+ * Usage:
+ *   Include <ThemeToggle /> anywhere in your app where you want the user to switch themes.
+ *
+ * Features:
+ *   - Light theme
+ *   - Dark theme
+ *   - System default theme
+ *
+ * Components used:
+ *   - Button: clickable trigger for the dropdown
+ *   - DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem: for theme selection
+ *   - Icons: Sun and Moon from "lucide-react" with transition animations
+ *
+ * Example:
+ *   <ThemeToggle />
+ */
+
 "use client";
 
 import * as React from "react";
