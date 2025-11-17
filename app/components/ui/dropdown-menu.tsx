@@ -1,3 +1,57 @@
+// -------------------------------
+// Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: app/components/ui   File: DropdownMenu.tsx
+//
+// Component Purpose:
+// - Fully customizable dropdown menu system for the Hirefy frontend.
+// - Built using Radix UI primitives with custom TailwindCSS styling.
+// - Supports submenus, checkbox items, radio groups, separators, labels,
+//   and keyboard shortcuts — making it scalable for complex UI needs.
+//
+// Technical Summary:
+// - Uses Radix Dropdown primitives: Root, Trigger, Content, Sub, Item,
+//   CheckboxItem, RadioItem, etc.
+// - React.forwardRef used extensively to allow refs to be passed to
+//   internal DOM nodes (important for accessibility and animations).
+// - cn() utility merges Tailwind classes efficiently and conditionally.
+// - Includes accessibility features: focus states, aria roles,
+//   data-state animations, and keyboard navigation support.
+// - Supports nested submenus using <DropdownMenuSub> and trigger/content pairs.
+// - Incorporates Lucide icons: Check, ChevronRight, Circle.
+//
+// Research & Learning:
+// - Studied Radix Dropdown docs: https://www.radix-ui.com/docs/primitives/components/dropdown-menu
+// - Learned best practices for animated menu components.
+// - Learned structure of complex reusable component APIs:
+//   Trigger → Content → Items → SubMenu → Indicators → Checkbox/Radio logic.
+// - Understood how Radix portals solve "clipping" issues by rendering outside DOM flow.
+// - Practiced organizing a large UI component into smaller reusable blocks.
+//
+// References / Tutorials:
+// • Radix Dropdown Menu – Official Docs  
+// • React ForwardRef – https://react.dev/reference/react/forwardRef  
+// • TailwindCSS Styling – https://tailwindcss.com/docs  
+// • Lucide React Icons – https://lucide.dev/
+//
+// ChatGPT Prompt Used:
+// "I need a fully customizable dropdown menu system for my Hirefy project that
+// supports submenus, checkbox items, radio items, labels, separators, and
+// keyboard shortcuts. Make sure it uses Radix UI primitives, TailwindCSS, and
+// follows accessible patterns. Export all menu components individually so they
+// can be used across multiple pages."
+//
+// Summary:
+// - Language: TypeScript + TSX
+// - Component Type: Client-side (interactive)
+// - Libraries Used: React, Radix UI Dropdown, Lucide Icons, TailwindCSS
+// - Purpose: A scalable dropdown menu system for navigation/settings/actions
+// -------------------------------
+
 'use client' // client-side component (allows interactivity)
 
 import * as React from "react" // React for components/refs
