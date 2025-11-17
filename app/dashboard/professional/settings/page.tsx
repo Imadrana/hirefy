@@ -1,58 +1,33 @@
-/*Build a Next.js 13 (App Router) page using TypeScript, React Hook Form, Zod, and shadcn/ui components called SettingsPage.
-
-The page should be a user account settings interface divided into four tabs:
-
-Profile
-
-Includes a form for fullName, email, and timezone.
-
-Validate inputs using Zod (name required, valid email, timezone required).
-
-On submit, show a toast (“Profile Updated”).
-
-Payouts
-
-Show existing payout account (mock data) with bank name and masked account number.
-
-Add a form to add a new bank account with fields: bankName, institutionNumber, transitNumber, accountNumber.
-
-Validate all fields with Zod.
-
-Show a loading spinner on submit and a toast (“Payout Method Updated”).
-
-Notifications
-
-Use toggles (Switch components) to manage boolean preferences:
-
-emailOnNewJob, emailOnInvitation, emailOnMessage, emailMarketing.
-
-Submit button saves preferences and shows a toast (“Notifications Updated”).
-
-Security
-
-Add a Change Password form with fields:
-
-currentPassword, newPassword, confirmPassword.
-
-Validate with Zod that passwords match and have a minimum length.
-
-Show loading spinner and success toast (“Password Updated”).
-
-Global Requirements:
-
-Use Tabs, Card, Form, Input, Select, Switch, and Button from @/components/ui.
-
-Use Lucide-react icons (e.g., Settings, User, Bell, Lock, Banknote, Landmark, Loader2).
-
-Use react-hook-form with zodResolver for validation.
-
-Include mock current data for each section (profile, payout, notifications).
-
-Add loading simulation (setTimeout) and form resets where appropriate.
-
-Show all forms styled cleanly with Tailwind spacing and responsive layout.
-
-Include full working code with all imports at the top.*/
+// ---------------------------------------------
+// Developer Reference Notes
+// ---------------------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware
+// Members: Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar, Anandjit Kaur
+// File: app/settings/page.tsx
+//
+// Description:
+// - Account Settings page grouped into four tabs: Profile, Payouts, Notifications, Security.
+// - Uses React Hook Form + Zod for validation across multiple independent forms.
+// - Implements simple local Tabs and Switch components as fallbacks instead of relying
+//   directly on shadcn/ui Tabs/Switch.
+// - Each section has its own loading state and shows toast feedback on successful submit.
+//
+// Development Process & Key Learnings:
+// - Structured multiple forms on the same page without mixing their state or validation schemas.
+// - Used zodResolver to keep form validation logic close to the input definitions.
+// - Practiced modeling user preferences (notifications, payout info) with strongly typed form values.
+// - Implemented lightweight controlled components (Tabs, Switch) that still feel like a proper UI kit.
+// - Added simple loading simulations with setTimeout to mimic real API calls and reset forms where needed.
+//
+// References & Resources Used:
+// • React Hook Form + zodResolver: https://react-hook-form.com/get-started#SchemaValidation  
+// • Zod validation library: https://zod.dev/  
+// • shadcn/ui components (Button, Card, Form, Input, Select): https://ui.shadcn.com  
+// • Lucide React Icons (Settings, User, Bell, Lock, Banknote, Landmark, Loader2): https://lucide.dev/icons  
+// • TailwindCSS for spacing, grid, and responsive layout: https://tailwindcss.com/docs  
+// ---------------------------------------------
 
 'use client';
 
