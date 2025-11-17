@@ -1,34 +1,32 @@
-/*Create a React/Next.js page for managing jobs using TailwindCSS and shadcn/ui components. The page should display a table of jobs with columns: Job Title, Client, Job Status, Payment Status, and Actions.
-
-Requirements:
-
-Use Card, Table, Badge, Button, and DropdownMenu components from shadcn/ui.
-
-Jobs data should be stored in a constant array of objects, each containing: id, title, client, status, and paymentStatus.
-
-The Job Status and Payment Status should have badges with different variants depending on their value (Active, Completed, Proposal Submitted, Invitation, Funded, Paid, N/A).
-
-Actions column should have a dropdown menu with:
-
-"View Job Details"
-
-"Contact Client"
-
-Conditional actions:
-
-If status is "Invitation", show "Submit Proposal"
-
-If status is "Active", show "Mark as Complete"
-
-Use lucide-react icons: Briefcase, MoreHorizontal, Eye, MessageSquare, CheckCircle, FileText.
-
-Make the table responsive: hide "Client" and "Payment Status" columns on small screens.
-
-Include a header with a title and description.
-
-Export the component as default from the page.
-
-Generate the full functional React component with all imports, JSX structure, and logic for mapping jobs and handling badge variants.*/
+// ---------------------------------------------
+// Developer Reference Notes
+// ---------------------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware
+// Members: Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar, Anandjit Kaur
+// File: app/manage-jobs/page.tsx
+//
+// Description:
+// - Dashboard page that shows all jobs where the professional’s proposal has been accepted.
+// - Reads accepted proposals from Firestore and then enriches them with related job + client data.
+// - Displays each job in a card with rate, duration, skills, and a “View Details” dialog.
+// - Focuses on the professional side: what they’ve been hired for and the proposal they sent.
+//
+// Development Process & Key Learnings:
+// - Used a Firestore query filtered by professionalId, then narrowed down to accepted proposals on the client side.
+// - Practiced combining data from multiple collections: proposals, jobs, and users (clients).
+// - Implemented a simple getTimeAgo helper to show relative accepted timestamps in the UI.
+// - Improved UI structure with shadcn/ui Card, Badge, Button, and a Dialog for detailed job/proposal view.
+// - Learned how to keep the layout responsive and readable using Tailwind flex/grid utilities.
+//
+// References & Resources Used:
+// • Firebase Firestore querying & document reads: https://firebase.google.com/docs/firestore/query-data/queries  
+// • Firestore document references (getDoc / doc): https://firebase.google.com/docs/firestore/query-data/get-data  
+// • shadcn/ui components (Card, Badge, Button, Dialog): https://ui.shadcn.com  
+// • Lucide React Icons (Briefcase, Loader2, Eye, DollarSign, Clock, User, FileText): https://lucide.dev/icons  
+// • TailwindCSS layout & spacing utilities: https://tailwindcss.com/docs  
+// ---------------------------------------------
 'use client';
 
 import { useEffect, useState } from "react";
