@@ -8,24 +8,25 @@
 // File: app/manage-jobs/page.tsx
 //
 // Description:
-// - Dashboard page that shows all jobs where the professional’s proposal has been accepted.
-// - Reads accepted proposals from Firestore and then enriches them with related job + client data.
-// - Displays each job in a card with rate, duration, skills, and a “View Details” dialog.
-// - Focuses on the professional side: what they’ve been hired for and the proposal they sent.
+// - “My Jobs” dashboard for professionals to see all jobs where their proposal was accepted.
+// - Listens to the Firestore `proposals` collection filtered by professionalId, then narrows
+//   down to proposals with status "accepted".
+// - For each accepted proposal, fetches the related job from `jobs` and client details from `users`.
+// - Displays each job with client name, skills, your rate, duration, and a details dialog.
 //
 // Development Process & Key Learnings:
-// - Used a Firestore query filtered by professionalId, then narrowed down to accepted proposals on the client side.
-// - Practiced combining data from multiple collections: proposals, jobs, and users (clients).
-// - Implemented a simple getTimeAgo helper to show relative accepted timestamps in the UI.
-// - Improved UI structure with shadcn/ui Card, Badge, Button, and a Dialog for detailed job/proposal view.
-// - Learned how to keep the layout responsive and readable using Tailwind flex/grid utilities.
+// - Practiced chaining Firestore queries with additional document lookups (proposals → job → client).
+// - Implemented client-side filtering on the snapshot to only keep accepted proposals.
+// - Used a simple `getTimeAgo` utility to show when a job was accepted in human-friendly text.
+// - Structured the layout using shadcn/ui Card, Badge, Button, and a Dialog for deeper job info.
+// - Focused on good UX for the “no jobs yet” state and loading state.
 //
 // References & Resources Used:
-// • Firebase Firestore querying & document reads: https://firebase.google.com/docs/firestore/query-data/queries  
-// • Firestore document references (getDoc / doc): https://firebase.google.com/docs/firestore/query-data/get-data  
+// • Firestore filtered queries & real-time snapshots: https://firebase.google.com/docs/firestore/query-data/queries  
+// • Firestore document reads with getDoc/doc: https://firebase.google.com/docs/firestore/query-data/get-data  
 // • shadcn/ui components (Card, Badge, Button, Dialog): https://ui.shadcn.com  
 // • Lucide React Icons (Briefcase, Loader2, Eye, DollarSign, Clock, User, FileText): https://lucide.dev/icons  
-// • TailwindCSS layout & spacing utilities: https://tailwindcss.com/docs  
+// • TailwindCSS for spacing, flex layouts, and responsiveness: https://tailwindcss.com/docs  
 // ---------------------------------------------
 'use client';
 
