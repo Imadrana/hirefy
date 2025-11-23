@@ -8,22 +8,23 @@
 // File: app/find-jobs/page.tsx
 //
 // Description:
-// - Client-facing page where professionals can browse and filter open jobs.
-// - Uses Firebase Firestore to load jobs in real time and enrich them with client info.
-// - Supports text search on job titles and a simple skill filter dropdown.
-// - Allows professionals to open a dialog and submit a proposal directly from a job card.
+// - Client-facing page where professionals can browse, search, and filter open jobs.
+// - Reads job posts from the Firestore `jobs` collection and only shows those with status "open".
+// - Enriches each job with client profile info (name and avatar) from the `users` collection.
+// - Supports text search on job titles and a skill dropdown to filter results.
+// - Lets professionals open a dialog, review key details, and submit a proposal stored in `proposals`.
 //
 // Development Process & Key Learnings:
-// - Practiced reading Firestore collections with onSnapshot and then sorting in memory by createdAt.
-// - Implemented defensive checks when reading timestamp and client profile fields from Firestore.
-// - Refined the job card layout using shadcn/ui Card, Badge, Button, Avatar, and responsive grid utilities.
-// - Used React state hooks to manage searchTerm, skillFilter, dialog visibility, and proposal form fields.
-// - Added basic validation in the submit handler to prevent empty proposals or invalid numeric rates.
+// - Practiced setting up a Firestore onSnapshot listener and then sorting the results by createdAt on the client.
+// - Implemented a simple `getTimeAgo` helper to display relative "Posted X ago" labels for each job card.
+// - Used React state to manage searchTerm, skillFilter, dialog visibility, and proposal form values cleanly.
+// - Added front-end validation for proposal rate and cover letter before writing to Firestore.
+// - Focused on making the layout responsive with a grid (1 column on mobile, 2 columns on larger screens).
 //
 // References & Resources Used:
 // • Next.js App Router & Client Components: https://nextjs.org/docs/app/building-your-application/routing  
-// • Firebase Firestore (realtime listeners & collections): https://firebase.google.com/docs/firestore/query-data/listen  
-// • shadcn/ui Component Library (Card, Badge, Button, Dialog, Input, Textarea, Avatar): https://ui.shadcn.com  
+// • Firebase Firestore real-time listeners (onSnapshot): https://firebase.google.com/docs/firestore/query-data/listen  
+// • shadcn/ui components (Card, Badge, Button, Dialog, Input, Textarea, Avatar): https://ui.shadcn.com  
 // • Lucide React Icons (Search, Tag, DollarSign, Clock, FileText, Loader2): https://lucide.dev/icons  
 // • TailwindCSS utility classes & responsive grid: https://tailwindcss.com/docs  
 // ---------------------------------------------
