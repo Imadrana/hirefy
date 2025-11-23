@@ -1,36 +1,20 @@
 'use client';
 
-import React, { 
-  createContext, 
-  useContext, 
-  useState, 
-  useEffect, 
-  ReactNode 
-} from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import type { Auth, User as FirebaseUser } from 'firebase/auth';
 import { 
-  User as FirebaseUser, 
-  onAuthStateChanged,
+  onAuthStateChanged, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  signOut,
-  signInWithPopup
+  signOut 
 } from 'firebase/auth';
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc 
-} from 'firebase/firestore';
-import { auth, db, authProviders } from '@/lib/firebase/firebase';
+import type { Firestore } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { auth as importedAuth, db as importedDb } from '@/lib/firebase/firebase';
 
-// User and Profile Interfaces
-export interface UserData {
-  uid: string;
-  email: string | null;
-  role: 'client' | 'professional' | 'admin';
-  profile?: ClientProfile | ProfessionalProfile;
-  createdAt?: string;
-}
+// ===============================
+// Types
+// ===============================
 
 export interface ClientProfile {
   companyName?: string;
@@ -50,7 +34,14 @@ export interface ProfessionalProfile {
   bio?: string;
 }
 
-// Define the context type
+export interface UserData {
+  uid: string;
+  email: string | null;
+  role: 'client' | 'professional' | 'admin';
+  profile?: ClientProfile | ProfessionalProfile;
+  createdAt?: string;
+}
+
 interface AuthContextType {
   user: FirebaseUser | null;
   userData: UserData | null;
@@ -59,153 +50,112 @@ interface AuthContextType {
   register: (email: string, password: string, role: UserData['role']) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (profile: ClientProfile | ProfessionalProfile) => Promise<void>;
-  signInWithGoogle: (role?: 'client' | 'professional') => Promise<void>;
 }
 
-// Create the context with a default value
+// ===============================
+// Context
+// ===============================
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Create the provider component
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+// ===============================
+// AuthProvider
+// ===============================
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Login method
+  // Client-only Firebase references
+  const auth: Auth | null = typeof window !== 'undefined' ? importedAuth : null;
+  const db: Firestore | null = typeof window !== 'undefined' ? importedDb : null;
+
+  // -------------------------------
+  // Login
+  // -------------------------------
   const login = async (email: string, password: string) => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-      
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      
-      if (userDocSnap.exists()) {
-        setUserData(userDocSnap.data() as UserData);
-        setUser(firebaseUser);
-      } else {
-        throw new Error('User data not found');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
+    if (!auth || !db) throw new Error('Firebase not initialized');
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
+
+    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+    if (!userDoc.exists()) throw new Error('User data not found');
+
+    setUser(firebaseUser);
+    setUserData(userDoc.data() as UserData);
   };
 
-  // Register method
+  // -------------------------------
+  // Register
+  // -------------------------------
   const register = async (email: string, password: string, role: UserData['role']) => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+    if (!auth || !db) throw new Error('Firebase not initialized');
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
 
-      const userData: UserData = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        role,
-        createdAt: new Date().toISOString()
-      };
+    const newUser: UserData = {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      role,
+      createdAt: new Date().toISOString(),
+    };
 
-      await setDoc(doc(db, 'users', firebaseUser.uid), userData);
-      
-      setUser(firebaseUser);
-      setUserData(userData);
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-    }
+    await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+
+    setUser(firebaseUser);
+    setUserData(newUser);
   };
 
-  // Google Sign-In method
-  const signInWithGoogle = async (role?: 'client' | 'professional') => {
-    try {
-      const result = await signInWithPopup(auth, authProviders.google);
-      const firebaseUser = result.user;
-
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      // If user doesn't exist, create a new user document
-      if (!userDocSnap.exists()) {
-        const newUserData: UserData = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          role: role || 'client', // Default to client if no role specified
-          createdAt: new Date().toISOString(),
-          profile: {
-            fullName: firebaseUser.displayName || ''
-          }
-        };
-
-        await setDoc(userDocRef, newUserData);
-        setUserData(newUserData);
-      } else {
-        // User exists, get their existing data
-        const existingUserData = userDocSnap.data() as UserData;
-        setUserData(existingUserData);
-      }
-
-      setUser(firebaseUser);
-    } catch (error) {
-      console.error('Google Sign-In error:', error);
-      throw error;
-    }
-  };
-
-  // Logout method
+  // -------------------------------
+  // Logout
+  // -------------------------------
   const logout = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-      setUserData(null);
-    } catch (error) {
-      console.error('Logout error:', error);
-      throw error;
-    }
+    if (!auth) return;
+    await signOut(auth);
+    setUser(null);
+    setUserData(null);
   };
 
-  // Update user profile method
+  // -------------------------------
+  // Update Profile
+  // -------------------------------
   const updateUserProfile = async (profile: ClientProfile | ProfessionalProfile) => {
-    if (!user) throw new Error('No authenticated user');
-
-    try {
-      await updateDoc(doc(db, 'users', user.uid), { profile });
-      
-      setUserData(prev => prev ? { ...prev, profile } : null);
-    } catch (error) {
-      console.error('Profile update error:', error);
-      throw error;
-    }
+    if (!user || !db) throw new Error('Firebase not initialized');
+    await updateDoc(doc(db, 'users', user.uid), { profile });
+    setUserData(prev => (prev ? { ...prev, profile } : null));
   };
 
-  // Authentication state listener
+  // -------------------------------
+  // Auth Listener (client-only)
+  // -------------------------------
   useEffect(() => {
+    if (!auth || !db) return;
+    setLoading(true);
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
-      
       if (firebaseUser) {
         setUser(firebaseUser);
-        
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        
-        if (userDocSnap.exists()) {
-          setUserData(userDocSnap.data() as UserData);
-        } else {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          setUserData(userDoc.exists() ? (userDoc.data() as UserData) : null);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
           setUserData(null);
         }
       } else {
         setUser(null);
         setUserData(null);
       }
-      
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth, db]);
 
-  // Provide context value
-  const value = {
+  // -------------------------------
+  // Context Value
+  // -------------------------------
+  const contextValue: AuthContextType = {
     user,
     userData,
     loading,
@@ -213,23 +163,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     register,
     logout,
     updateUserProfile,
-    signInWithGoogle
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
-// Custom hook to use the auth context
-export const useAuth = () => {
+// -------------------------------
+// Custom Hook
+// -------------------------------
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
