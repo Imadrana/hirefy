@@ -1,4 +1,50 @@
-
+// -------------------------------
+//  Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware 
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: app/dashboard/company-profile   File: page.tsx
+//
+// Description:
+// - Client-side Next.js page for managing a client's company profile
+// - Allows authenticated users to view and edit business information
+// - Integrates with Firebase Firestore to load and persist profile data
+// - Uses React Hook Form + Zod for form handling and validation
+// - Uses shadcn/ui components and lucide-react icons for UI and layout
+//
+// Technical Understanding & Research Summary:
+// - Learned how to build controlled forms using react-hook-form with zodResolver
+// - Implemented validation schema with Zod for strong type safety
+// - Used Firebase Firestore (doc, getDoc, setDoc, updateDoc) to read/write user profile data
+// - Used Next.js "use client" directive for client-side hooks (useState, useEffect, useAuth)
+// - Utilized shadcn/ui components (Form, Input, Textarea, Card, Button) for consistent styling
+// - Used a loading state and initial loading spinner for better UX while fetching data
+//
+// References / Tutorials:
+// • React Hook Form: https://react-hook-form.com/get-started
+// • Zod Validation: https://zod.dev/?id=basic-usage
+// • Firebase Firestore: https://firebase.google.com/docs/firestore/quickstart
+// • shadcn/ui Components: https://ui.shadcn.com
+// • Next.js Client Components: https://nextjs.org/docs/app/building-your-application/rendering/client-components
+//
+// -------------------------------
+// ChatGPT Prompt Used
+// -------------------------------
+//
+// "Add a Developer Reference Notes section at the top of this CompanyProfilePage
+// file and add explanatory comments throughout the code. Keep all logic and 
+// structure the same, just add documentation-style notes so it is easy for the
+// instructor and group members to understand how the page works."
+//
+// -------------------------------
+// Summary:
+// - Language: TypeScript / TSX (React + Next.js)
+// - Side: Frontend (Client-side page)
+// - Libraries Used: Next.js, React Hook Form, Zod, Firebase Firestore, shadcn/ui, lucide-react
+// - Purpose: Let clients manage their public company profile and contact information
+// -------------------------------
 'use client';
 
 import { useState } from 'react';
