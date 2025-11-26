@@ -1,312 +1,314 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { collection, query, where, onSnapshot, doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/firebase';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, CheckCircle, XCircle, Loader2, User, DollarSign, FileText } from 'lucide-react';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Briefcase, MoreHorizontal, Eye, Edit, Archive, FilePlus2, Loader2, Trash2, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-
-interface Proposal {
-  id: string;
-  jobId: string;
-  jobTitle: string;
-  professionalId: string;
-  professionalEmail: string;
-  professionalName: string;
-  coverLetter: string;
-  proposedRate: number;
-  status: 'pending' | 'accepted' | 'declined';
-  createdAt: any;
-}
+import { useRouter } from 'next/navigation';
 
 interface Job {
   id: string;
   title: string;
+  description: string;
+  skills: string[];
   budget: number;
+  duration: string;
+  category: string;
+  location: string;
+  datePosted: string;
+  status: 'open' | 'closed' | 'in-progress' | 'completed';
+  applicants: any[];
+  clientId: string;
+  createdAt?: any;
 }
 
-const statusVariant: Record<Proposal['status'], 'default' | 'secondary' | 'destructive'> = {
-  'pending': 'default',
-  'accepted': 'secondary',
-  'declined': 'destructive',
+const statusVariant: Record<Job['status'], 'default' | 'secondary' | 'destructive' | 'outline'> = {
+  'open': 'default',
+  'in-progress': 'secondary',
+  'completed': 'outline',
+  'closed': 'destructive',
 };
 
-const statusLabel: Record<Proposal['status'], string> = {
-  'pending': 'Pending',
-  'accepted': 'Accepted',
-  'declined': 'Declined',
+const statusLabel: Record<Job['status'], string> = {
+  'open': 'Open',
+  'in-progress': 'In Progress',
+  'completed': 'Completed',
+  'closed': 'Closed',
 };
 
-export default function JobProposalsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const jobId = params.jobId as string;
-
-  const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [job, setJob] = useState<Job | null>(null);
+export default function ManageJobsPage() {
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-
+  
   const { user } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
-  // Fetch job details
   useEffect(() => {
-    if (!jobId || !user) return;
+    if (!db || !user) return;
 
-    const fetchJob = async () => {
+    const fetchJobs = async () => {
+      setLoading(true);
       try {
-        const jobDoc = await getDoc(doc(db, 'jobs', jobId));
-        if (jobDoc.exists()) {
-          const data = jobDoc.data();
-          // Verify this is the client's job
-          if (data.clientId !== user.uid) {
-            toast({
-              variant: 'destructive',
-              title: 'Access Denied',
-              description: 'You do not have permission to view these proposals.',
-            });
-            router.push('/dashboard/client/manage-jobs');
-            return;
-          }
-          setJob({
-            id: jobDoc.id,
-            title: data.title,
-            budget: data.budget,
-          });
-        } else {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Job not found.',
-          });
-          router.push('/dashboard/client/manage-jobs');
-        }
-      } catch (error) {
-        console.error('Error fetching job:', error);
-      }
-    };
+        const jobsRef = collection(db, 'jobs');
+        // Temporarily use a simpler query while index is building
+        const q = query(jobsRef, where('clientId', '==', user.uid));
+        const snapshot = await getDocs(q);
 
-    fetchJob();
-  }, [jobId, user, toast, router]);
-
-  // Fetch proposals
-  useEffect(() => {
-    if (!jobId || !user) {
-      console.log('⚠️ No jobId or user found', { jobId, userId: user?.uid });
-      return;
-    }
-
-    console.log('🔍 Starting to fetch proposals for jobId:', jobId, 'user:', user.uid);
-
-    // Query proposals where clientId matches current user (this respects Firestore rules)
-    const proposalsCollection = collection(db, 'proposals');
-    const proposalsQuery = query(
-      proposalsCollection, 
-      where('clientId', '==', user.uid)
-    );
-
-    const unsubscribe = onSnapshot(
-      proposalsQuery,
-      (snapshot) => {
-        console.log('📦 Total proposals for client:', snapshot.docs.length);
-        const proposalsData: Proposal[] = [];
-        
-        // Filter for this specific job's proposals client-side
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data();
-          console.log('📄 Checking proposal:', doc.id, 'jobId:', data.jobId, 'matches:', data.jobId === jobId);
-          if (data.jobId === jobId) {
-            proposalsData.push({
+        const fetchedJobs: Job[] = snapshot.docs
+          .map(doc => {
+            const data = doc.data();
+            return {
               id: doc.id,
-              ...data,
-            } as Proposal);
-          }
-        });
+              title: data.title || 'Untitled',
+              description: data.description || '',
+              skills: data.skills || [],
+              budget: data.budget || 0,
+              duration: data.duration || '',
+              category: data.category || '',
+              location: data.location || '',
+              datePosted: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'N/A',
+              status: data.status || 'open',
+              applicants: data.applicants || [],
+              clientId: data.clientId || '',
+              createdAt: data.createdAt || null,
+            };
+          })
+          // Sort by createdAt on client side
+          .sort((a, b) => {
+            if (!a.createdAt || !b.createdAt) return 0;
+            return b.createdAt.seconds - a.createdAt.seconds;
+          });
 
-        // Sort by createdAt
-        proposalsData.sort((a, b) => {
-          const aTime = a.createdAt?.toDate?.() || new Date(0);
-          const bTime = b.createdAt?.toDate?.() || new Date(0);
-          return bTime.getTime() - aTime.getTime();
-        });
-
-        console.log('✅ Found proposals for job', jobId, ':', proposalsData.length);
-        console.log('📋 Proposals data:', proposalsData);
-        setProposals(proposalsData);
-        setLoading(false);
-      },
-      (error) => {
-        console.error('❌ Error fetching proposals:', error);
-        console.error('❌ Error details:', error.message, error.code);
+        setJobs(fetchedJobs);
+      } catch (error: any) {
+        console.error('Error fetching jobs:', error);
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: `Failed to load proposals: ${error.message}`,
+          description: error.message || 'Failed to fetch jobs. Please try again.',
         });
+      } finally {
         setLoading(false);
       }
-    );
+    };
 
-    return () => unsubscribe();
-  }, [jobId, user, toast]);
+    fetchJobs();
+  }, [db, user, toast]);
 
-  const handleViewProposal = (proposal: Proposal) => {
-    setSelectedProposal(proposal);
+  const handleViewJob = (job: Job) => {
+    setSelectedJob(job);
     setViewDialogOpen(true);
   };
 
-  const handleAcceptProposal = async (proposalId: string) => {
+  const handleEditJob = (jobId: string) => {
+    router.push(`/dashboard/client/manage-jobs/edit/${jobId}`);
+  };
+
+  const handleCloseJob = async (jobId: string) => {
     setActionLoading(true);
     try {
-      const proposalRef = doc(db, 'proposals', proposalId);
-      await updateDoc(proposalRef, {
-        status: 'accepted',
-        updatedAt: serverTimestamp(),
+      const jobRef = doc(db, 'jobs', jobId);
+      await updateDoc(jobRef, {
+        status: 'closed',
+        updatedAt: Timestamp.now(),
       });
 
+      setJobs(jobs.map(job => 
+        job.id === jobId ? { ...job, status: 'closed' } : job
+      ));
+
       toast({
-        title: 'Success!',
-        description: 'Proposal accepted successfully!',
+        title: 'Success',
+        description: 'Job has been closed successfully.',
       });
-      setViewDialogOpen(false);
     } catch (error) {
-      console.error('Error accepting proposal:', error);
+      console.error('Error closing job:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to accept proposal. Please try again.',
+        description: 'Failed to close job. Please try again.',
       });
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleDeclineProposal = async (proposalId: string) => {
+  const handleDeleteJob = async () => {
+    if (!selectedJob) return;
+    
     setActionLoading(true);
     try {
-      const proposalRef = doc(db, 'proposals', proposalId);
-      await updateDoc(proposalRef, {
-        status: 'declined',
-        updatedAt: serverTimestamp(),
-      });
+      const jobRef = doc(db, 'jobs', selectedJob.id);
+      await deleteDoc(jobRef);
+
+      setJobs(jobs.filter(job => job.id !== selectedJob.id));
 
       toast({
-        title: 'Proposal Declined',
-        description: 'The proposal has been declined.',
+        title: 'Success',
+        description: 'Job has been deleted successfully.',
       });
-      setViewDialogOpen(false);
+
+      setDeleteDialogOpen(false);
+      setSelectedJob(null);
     } catch (error) {
-      console.error('Error declining proposal:', error);
+      console.error('Error deleting job:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to decline proposal. Please try again.',
+        description: 'Failed to delete job. Please try again.',
       });
     } finally {
       setActionLoading(false);
     }
   };
 
-  const getTimeAgo = (timestamp: any): string => {
-    if (!timestamp) return 'Recently';
-    
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
-    return `${Math.floor(seconds / 604800)} weeks ago`;
+  const openDeleteDialog = (job: Job) => {
+    setSelectedJob(job);
+    setDeleteDialogOpen(true);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <Button variant="ghost" size="sm" asChild className="mb-2">
-            <Link href="/dashboard/client/manage-jobs">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Jobs
-            </Link>
-          </Button>
-          <h1 className="text-3xl font-bold">Proposals</h1>
-          {job && (
-            <p className="text-muted-foreground mt-1">
-              For: <span className="font-semibold">{job.title}</span>
-            </p>
-          )}
-        </div>
+        <h1 className="text-3xl font-headline font-bold flex items-center gap-2">
+          <Briefcase className="h-8 w-8 text-primary" /> Manage Job Postings
+        </h1>
+        <Button asChild>
+          <Link href="/dashboard/client/post-job">
+            <FilePlus2 className="mr-2" /> Post New Job
+          </Link>
+        </Button>
       </div>
 
-      {/* Proposals List */}
+      {/* Jobs List */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2 text-muted-foreground">Loading proposals...</span>
+          <span className="ml-2 text-muted-foreground">Loading your jobs...</span>
         </div>
-      ) : proposals.length === 0 ? (
+      ) : jobs.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
-            <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No proposals yet</h3>
-            <p className="text-muted-foreground">
-              Professionals haven't submitted any proposals for this job yet.
+            <div className="flex justify-center mb-4">
+              <div className="rounded-full bg-primary/10 p-6">
+                <Briefcase className="h-12 w-12 text-primary" />
+              </div>
+            </div>
+            <h3 className="text-xl font-semibold mb-2">No jobs posted yet</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Start hiring talented professionals by posting your first job. It only takes a few minutes!
             </p>
+            <Button asChild size="lg">
+              <Link href="/dashboard/client/post-job">
+                <FilePlus2 className="mr-2 h-5 w-5" /> Post Your First Job
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
-          {proposals.map((proposal) => (
-            <Card key={proposal.id} className="hover:shadow-md transition-shadow">
+          {jobs.map((job) => (
+            <Card key={job.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between gap-4">
-                  {/* Left Section */}
+                  {/* Left Section - Job Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="rounded-full bg-primary/10 p-2">
-                        <User className="h-5 w-5 text-primary" />
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="rounded-lg bg-primary/10 p-2.5 mt-0.5">
+                        <Briefcase className="h-5 w-5 text-primary" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-lg">{proposal.professionalName}</h3>
-                        <p className="text-sm text-muted-foreground">{proposal.professionalEmail}</p>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold mb-1 truncate">{job.title}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                          {job.description}
+                        </p>
+                        
+                        {/* Skills */}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {job.skills.slice(0, 4).map((skill, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                          {job.skills.length > 4 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{job.skills.length - 4} more
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                      {proposal.coverLetter}
-                    </p>
-
-                    <div className="flex items-center gap-6 text-sm">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                        <span className="font-semibold">${proposal.proposedRate.toLocaleString()}</span>
+                    {/* Job Meta Info */}
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-foreground">${job.budget.toLocaleString()}</span>
+                        <span>Budget</span>
                       </div>
-                      <div className="text-muted-foreground">
-                        Submitted {getTimeAgo(proposal.createdAt)}
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-foreground">{job.category}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span>Posted {job.datePosted}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-foreground">{job.applicants.length}</span>
+                        <span>{job.applicants.length === 1 ? 'Applicant' : 'Applicants'}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Right Section */}
+                  {/* Right Section - Status & Actions */}
                   <div className="flex flex-col items-end gap-3">
-                    <Badge variant={statusVariant[proposal.status]}>
-                      {statusLabel[proposal.status]}
+                    <Badge variant={statusVariant[job.status]} className="whitespace-nowrap">
+                      {statusLabel[job.status]}
                     </Badge>
-                    <Button size="sm" onClick={() => handleViewProposal(proposal)}>
-                      View Details
-                    </Button>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => handleViewJob(job)}>
+                          <Eye className="mr-2 h-4 w-4" /> View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push(`/dashboard/client/manage-jobs/${job.id}/proposals`)}>
+                          <FileText className="mr-2 h-4 w-4" /> View Proposals
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditJob(job.id)} disabled={job.status === 'closed'}>
+                          <Edit className="mr-2 h-4 w-4" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {job.status === 'open' && (
+                          <DropdownMenuItem onClick={() => handleCloseJob(job.id)}>
+                            <Archive className="mr-2 h-4 w-4" /> Close Job
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem 
+                          onClick={() => openDeleteDialog(job)}
+                          className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </CardContent>
@@ -315,104 +317,122 @@ export default function JobProposalsPage() {
         </div>
       )}
 
-      {/* View Proposal Dialog */}
+      {/* View Job Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Proposal Details</DialogTitle>
-            <DialogDescription>
-              Review the professional's proposal for this job
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedProposal && (
-            <div className="space-y-4 py-4">
-              {/* Professional Info */}
-              <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                <div className="rounded-full bg-primary/10 p-3">
-                  <User className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">{selectedProposal.professionalName}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedProposal.professionalEmail}</p>
-                </div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <DialogTitle className="text-2xl font-bold mb-2">{selectedJob?.title}</DialogTitle>
+                <DialogDescription className="text-base">
+                  {selectedJob?.category} • Posted on {selectedJob?.datePosted}
+                </DialogDescription>
               </div>
-
-              {/* Proposed Rate */}
-              <div className="grid grid-cols-2 gap-4">
+              {selectedJob && (
+                <Badge variant={statusVariant[selectedJob.status]} className="mt-1">
+                  {statusLabel[selectedJob.status]}
+                </Badge>
+              )}
+            </div>
+          </DialogHeader>
+          {selectedJob && (
+            <div className="space-y-6 mt-2">
+              {/* Description */}
+              <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                  Job Description
+                </h3>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedJob.description}</p>
+              </div>
+              
+              {/* Key Details Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="border rounded-lg p-4">
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
-                    Proposed Rate
+                    Budget
                   </div>
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    ${selectedProposal.proposedRate.toLocaleString()}
+                    ${selectedJob.budget.toLocaleString()}
                   </div>
                 </div>
+                
                 <div className="border rounded-lg p-4">
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
-                    Your Budget
+                    Duration
                   </div>
-                  <div className="text-2xl font-bold">
-                    ${job?.budget.toLocaleString()}
+                  <div className="text-lg font-semibold">
+                    {selectedJob.duration}
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                    Applicants
+                  </div>
+                  <div className="text-lg font-semibold">
+                    {selectedJob.applicants.length} {selectedJob.applicants.length === 1 ? 'professional' : 'professionals'}
                   </div>
                 </div>
               </div>
 
-              {/* Cover Letter */}
+              {/* Location */}
               <div>
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                  Cover Letter
-                </h4>
-                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4">
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                    {selectedProposal.coverLetter}
-                  </p>
-                </div>
-              </div>
-
-              {/* Status */}
-              <div>
-                <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                  Status
-                </h4>
-                <Badge variant={statusVariant[selectedProposal.status]}>
-                  {statusLabel[selectedProposal.status]}
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                  Work Location
+                </h3>
+                <Badge variant="outline" className="capitalize text-sm">
+                  {selectedJob.location}
                 </Badge>
+              </div>
+
+              {/* Skills */}
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                  Required Skills
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedJob.skills.map((skill, index) => (
+                    <Badge key={index} variant="secondary" className="text-sm px-3 py-1">
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
           )}
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setViewDialogOpen(false)} disabled={actionLoading}>
+          <DialogFooter className="mt-6 gap-2">
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
               Close
             </Button>
-            {selectedProposal && selectedProposal.status === 'pending' && (
-              <>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleDeclineProposal(selectedProposal.id)}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <XCircle className="mr-2 h-4 w-4" />
-                  )}
-                  Decline
-                </Button>
-                <Button
-                  onClick={() => handleAcceptProposal(selectedProposal.id)}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                  )}
-                  Accept
-                </Button>
-              </>
+            {selectedJob && selectedJob.status !== 'closed' && (
+              <Button onClick={() => {
+                setViewDialogOpen(false);
+                handleEditJob(selectedJob.id);
+              }}>
+                <Edit className="mr-2 h-4 w-4" /> Edit Job
+              </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Job</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{selectedJob?.title}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={actionLoading}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteJob} disabled={actionLoading}>
+              {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
