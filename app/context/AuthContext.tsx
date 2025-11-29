@@ -5,7 +5,7 @@
 // Project: Hirefy – On-Demand IT Service Platform
 // Group: S-Ware 
 // Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
-// Folder: app/contact   File: page.tsx
+// Folder: content/Authcontext.tsx
 //
 // Description:
 // - Front-end React (TypeScript/TSX) page for the Hirefy Contact section
