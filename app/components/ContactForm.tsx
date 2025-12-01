@@ -1,0 +1,175 @@
+// -------------------------------
+//  Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware 
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: app/components/ui File: ContactForm.tsx
+//
+// Description:
+// - Front-end React (TypeScript/TSX) component for the Hirefy Contact Form  
+// - Uses React Hook Form with Zod for validation  
+// - Collects user’s name, email, and message  
+// - Shows real-time validation errors and toast confirmation  
+// - Resets the form after successful submission  
+//
+// Technical Understanding & Research Summary:
+// - Researched via Google, React docs (https://react.dev), React Hook Form, and Zod docs  
+// - Watched tutorials for form validation and UI best practices  
+//   • https://www.youtube.com/watch?v=cc_xmawJ8Kg  
+//   • https://www.youtube.com/watch?v=0K6DeQZykQU  
+// - Selected React Hook Form + Zod + toast notifications for efficiency and usability  
+// - Final code refined and documented with ChatGPT assistance for clarity and maintainability. 
+// -------------------------------
+// ChatGPT Prompt Used
+// -------------------------------
+// I gave ChatGPT the following prompt to help me write and understand
+// this component clearly:
+//
+// "I need you to create a 'ContactForm' component for my Hirefy web application.
+// Use React Hook Form with Zod validation and toast notifications to handle form state,
+// input validation, and user feedback. Design the UI to be modern, responsive, and
+// user-friendly, suitable for the Hirefy contact page. Please include all essential
+// features such as real-time validation, loading state, success toast, and form reset
+// in the final code implementation."
+// -------------------------------
+//  Summary:
+// - Language: TypeScript / TSX (React)
+// - Side: Frontend Component (Client-side)
+// - Libraries Used: react-hook-form, zod, shadcn/ui, lucide-react
+// - Purpose: To collect and validate user messages, simulate sending,
+//   display confirmation, and reset form state.
+// -------------------------------
+
+'use client'; // Next.js directive: this component runs on the client (browser), allowing hooks like useState/useEffect.
+
+import { useState } from 'react'; // React state hook for local component state (e.g., loading spinner).
+import { useForm } from 'react-hook-form'; // Main hook to manage form state, validation, and submission.
+import { zodResolver } from '@hookform/resolvers/zod'; // Bridges Zod schema validation into react-hook-form.
+import * as z from 'zod'; // Zod library for defining and validating schemas/types at runtime.
+import { Button } from '../components/ui/button'; // UI Button component (likely shadcn/ui or your design system).
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form'; // Form primitives to integrate RHF with your UI kit.
+import { Input } from '../components/ui/input'; // Styled input component.
+import { Textarea } from './../components/ui/textarea'; // Styled textarea component.
+import { useToast } from '../hooks/use-toast'; // Custom hook to trigger toast notifications.
+import { Loader2, Send } from 'lucide-react'; // Icon components (spinner + send icon).
+
+// Define a Zod schema describing valid form data.
+// - name: string, min 2 chars
+// - email: valid email format
+// - message: string, min 10 chars
+const formSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  message: z.string().min(10, { message: 'Message must be at least 10 characters.' }),
+});
+
+// Default export of the ContactForm React component.
+export default function ContactForm() {
+  const { toast } = useToast(); // Destructure toast function to show success/error/info toasts.
+  const [loading, setLoading] = useState(false); // Local UI state: true while "sending" to disable button and show spinner.
+
+  // Initialize react-hook-form with:
+  // - Type inference from Zod schema (z.infer<typeof formSchema>)
+  // - zodResolver to enforce schema validation
+  // - defaultValues to pre-fill form fields
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      message: '',
+    },
+  });
+
+  // Submit handler: receives validated values (matching formSchema).
+  // Marked async to simulate an API request with a delay.
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setLoading(true); // Show loading state (disables submit button + shows spinner).
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Wait 1.5s to mimic network request.
+    console.log('Form submitted:', values); // Dev log: shows the form data payload in the console.
+    
+    setLoading(false); // Stop loading state after "request" completes.
+    toast({
+      title: 'Message Sent!', // Toast heading.
+      description: "Thanks for reaching out. We'll get back to you shortly.", // Toast body text.
+    });
+    form.reset(); // Clear the form back to defaultValues.
+  };
+
+  // JSX render: Form provider wraps the native <form> to pass RHF context to children.
+  return (
+    <Form {...form}>
+      {/* Native form element: onSubmit is wired through RHF's handleSubmit,
+          which runs validation first, then calls onSubmit with valid values. */}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Title of the form */}
+        <h2 className="text-2xl font-bold font-headline">Send us a message</h2>
+
+        {/* NAME FIELD
+            FormField connects a single field name to RHF's control.
+            The render prop receives "field" helpers (value, onChange, ref, etc.). */}
+        <FormField
+          control={form.control} // RHF control object to bind inputs.
+          name="name" // Field key matches the schema and defaultValues.
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Name</FormLabel> {/* Accessible label for the input */}
+              <FormControl>
+                {/* Spread {...field} wires value, onChange, onBlur, ref to Input. */}
+                <Input placeholder="John Doe" {...field} />
+              </FormControl>
+              <FormMessage /> {/* Shows validation error for 'name' if present. */}
+            </FormItem>
+          )}
+        />
+
+        {/* EMAIL FIELD */}
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email Address</FormLabel>
+              <FormControl>
+                <Input placeholder="you@example.com" {...field} />
+              </FormControl>
+              <FormMessage /> {/* Shows email validation errors. */}
+            </FormItem>
+          )}
+        />
+
+        {/* MESSAGE FIELD */}
+        <FormField
+          control={form.control}
+          name="message"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Your Message</FormLabel>
+              <FormControl>
+                {/* rows={5} sets visible height; {...field} binds RHF events/value. */}
+                <Textarea placeholder="How can we help you today?" {...field} rows={5} />
+              </FormControl>
+              <FormMessage /> {/* Shows message validation errors. */}
+            </FormItem>
+          )}
+        />
+
+        {/* SUBMIT BUTTON
+            - disabled while loading to prevent double submits
+            - shows spinner icon when loading, send icon otherwise
+            - label toggles between 'Sending...' and 'Send Message' */}
+        <Button type="submit" className="w-full font-bold" disabled={loading}>
+          {loading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> // Spinner icon while sending.
+          ) : (
+            <Send className="mr-2 h-4 w-4" /> // Paper-plane icon when idle.
+          )}
+          {loading ? 'Sending...' : 'Send Message'} {/* Dynamic button text */}
+        </Button>
+      </form>
+    </Form>
+  );
+}
