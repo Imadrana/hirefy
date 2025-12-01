@@ -1,3 +1,49 @@
+/*// -------------------------------
+//  Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware 
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: content/Authcontext.tsx
+//
+// Description:
+// - Front-end React (TypeScript/TSX) page for the Hirefy Contact section
+// - Displays contact form and key contact details (email, office address, phone)
+// - Uses reusable UI components: Card, CardContent, and ContactForm
+// - Uses lucide-react icons for visual clarity (Mail, MapPin, Phone)
+// - Layout: Two-column grid (form on left, contact info on right) with responsive design
+//
+// Technical Understanding & Research Summary:
+// - Learned how Next.js app router maps /app/contact/page.tsx to /contact route
+// - Practiced TailwindCSS layout utilities (grid, flex, spacing, responsive breakpoints)
+// - Used lucide-react for scalable SVG icons in React components
+// - Applied Card and CardContent components to create a clean, boxed form layout
+// - Structured semantic JSX with headings, paragraphs, and anchor tags for email/phone links
+//
+// References / Tutorials:
+// • Next.js App Router & Routing: https://nextjs.org/docs/app/building-your-application/routing
+// • TailwindCSS Utility Classes: https://tailwindcss.com/docs
+// • Lucide Icons Documentation: https://lucide.dev
+//
+// -------------------------------
+// ChatGPT Prompt Used
+// -------------------------------
+//
+// "I need you to add a reference section and detailed comments to my Contact page 
+// code for the Hirefy project. Keep the existing layout, components, and logic the same, 
+// but include a 'Developer Reference Notes' block at the top (similar to the About page) 
+// and make sure the code is well-documented so it’s easy for our group members and 
+// instructor to understand."
+//
+// -------------------------------
+// Summary:
+// - Language: TypeScript / TSX (React + Next.js)
+// - Side: Frontend Page (Client-side)
+// - Libraries Used: Next.js, TailwindCSS, lucide-react, custom UI components
+// - Purpose: Provide users with a way to contact Hirefy via form, email, address, and phone
+// -------------------------------
+*/
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
