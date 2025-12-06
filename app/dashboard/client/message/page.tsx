@@ -6,8 +6,9 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Paperclip, X, FileText, Download, Bell } from 'lucide-react';
+import { Loader2, Paperclip, X, FileText, Download, Bell, Check, CheckCheck, Clock } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,8 @@ interface Message {
   fileUrl?: string;
   fileName?: string;
   fileType?: string;
+  status?: 'sent' | 'delivered' | 'read';
+  readBy?: Record<string, any>; // Map of userId -> timestamp when they read the message
 }
 
 interface Conversation {
@@ -36,6 +39,8 @@ interface Conversation {
   participantDetails: Record<string, { name: string; email: string; role: string; avatar?: string; photoURL?: string }>;
   lastMessage: string;
   lastMessageTimestamp: any;
+  lastSenderId?: string;
+  lastReadTimestamps?: Record<string, any>;
   messages: Message[];
 }
 
@@ -51,6 +56,7 @@ export default function MessagesPage() {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [participantAvatars, setParticipantAvatars] = useState<Record<string, string>>({});
+  const [participantAvailability, setParticipantAvailability] = useState<Record<string, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -80,6 +86,8 @@ export default function MessagesPage() {
               participantDetails: data.participantDetails || {},
               lastMessage: data.lastMessage || '',
               lastMessageTimestamp: data.lastMessageTimestamp || null,
+              lastSenderId: data.lastSenderId || null,
+              lastReadTimestamps: data.lastReadTimestamps || {},
               messages: [],
             };
           });
@@ -93,7 +101,8 @@ export default function MessagesPage() {
             });
           });
 
-          // Load avatars from Firestore users collection
+          // Load avatars and availability from Firestore users collection
+          const availabilityMap: Record<string, string> = {};
           await Promise.all(
             Array.from(participantIds).map(async (participantId) => {
               try {
@@ -106,20 +115,23 @@ export default function MessagesPage() {
                   if (avatarUrl) {
                     avatarMap[participantId] = avatarUrl;
                   }
+                  // Get availability status
+                  availabilityMap[participantId] = userData.availabilityStatus || 'available';
                 }
               } catch (error) {
-                console.error(`Error fetching avatar for ${participantId}:`, error);
+                console.error(`Error fetching data for ${participantId}:`, error);
               }
             })
           );
 
           setParticipantAvatars(avatarMap);
+          setParticipantAvailability(availabilityMap);
           setConversations(fetchedConversations);
           
-          // Select first conversation if none selected
-          if (!selectedConversationId && fetchedConversations.length > 0) {
-            setSelectedConversationId(fetchedConversations[0].id);
-          }
+          // Don't auto-select first conversation - let user click to open
+          // if (!selectedConversationId && fetchedConversations.length > 0) {
+          //   setSelectedConversationId(fetchedConversations[0].id);
+          // }
           setLoading(false);
         });
 
@@ -154,6 +166,16 @@ export default function MessagesPage() {
           console.log('Processing message from:', msg.senderId, 'Current user:', user?.uid);
           if (msg.senderId !== user?.uid) {
             console.log('Showing notification for message:', msg);
+            
+            // Play notification sound
+            try {
+              const audio = new Audio('/notification.mp3');
+              audio.volume = 0.5; // Set volume to 50%
+              audio.play().catch(err => console.log('Audio play failed:', err));
+            } catch (error) {
+              console.log('Error playing notification sound:', error);
+            }
+            
             // Show toast notification
             toast({
               title: '💬 New Message',
@@ -195,6 +217,62 @@ export default function MessagesPage() {
       Notification.requestPermission();
     }
   }, []);
+
+  // Mark conversation as read when selected
+  useEffect(() => {
+    if (!db || !selectedConversationId || !user) return;
+
+    const markAsRead = async () => {
+      try {
+        const conversationRef = doc(db, 'conversations', selectedConversationId);
+        await updateDoc(conversationRef, {
+          [`lastReadTimestamps.${user.uid}`]: serverTimestamp(),
+        });
+        console.log('Marked conversation as read:', selectedConversationId);
+      } catch (error) {
+        console.error('Error marking conversation as read:', error);
+      }
+    };
+
+    markAsRead();
+  }, [db, selectedConversationId, user]);
+
+  // Mark all messages in the conversation as read
+  useEffect(() => {
+    if (!db || !selectedConversationId || !user || messages.length === 0) return;
+
+    const markMessagesAsRead = async () => {
+      try {
+        // Find unread messages from other users
+        const unreadMessages = messages.filter(msg => 
+          msg.senderId !== user.uid && 
+          (!msg.readBy || !msg.readBy[user.uid])
+        );
+
+        if (unreadMessages.length === 0) return;
+
+        console.log(`Marking ${unreadMessages.length} messages as read`);
+
+        // Update each unread message
+        const messagesRef = collection(db, 'conversations', selectedConversationId, 'messages');
+        const updatePromises = unreadMessages.map(async (msg) => {
+          const messageRef = doc(messagesRef, msg.id);
+          await updateDoc(messageRef, {
+            [`readBy.${user.uid}`]: serverTimestamp(),
+            status: 'read',
+          });
+        });
+
+        await Promise.all(updatePromises);
+      } catch (error) {
+        console.error('Error marking messages as read:', error);
+      }
+    };
+
+    // Small delay to ensure messages are loaded
+    const timer = setTimeout(markMessagesAsRead, 500);
+    return () => clearTimeout(timer);
+  }, [db, selectedConversationId, user, messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,6 +327,8 @@ export default function MessagesPage() {
         text: newMessage.trim(),
         createdAt: serverTimestamp(),
         timestamp: new Date().toISOString(),
+        status: 'sent',
+        readBy: {},
       };
 
       if (fileUrl) {
@@ -329,6 +409,52 @@ export default function MessagesPage() {
   const otherParticipantId = selectedConversation?.participants.find(p => p !== user?.uid);
   const otherParticipant = otherParticipantId ? selectedConversation?.participantDetails[otherParticipantId] : null;
 
+  // Check if a conversation is unread
+  const isConversationUnread = (convo: Conversation) => {
+    if (!user) return false;
+    
+    const lastSenderId = convo.lastSenderId;
+    const lastMessageTimestamp = convo.lastMessageTimestamp;
+    const lastReadTimestamps = convo.lastReadTimestamps || {};
+    const userLastRead = lastReadTimestamps[user.uid];
+    
+    // Unread if last message was from other person and hasn't been read
+    if (lastSenderId && lastSenderId !== user.uid) {
+      if (!userLastRead || (lastMessageTimestamp && lastMessageTimestamp.toMillis() > userLastRead.toMillis())) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
+
+  // Count unread messages in a conversation
+  const getUnreadCount = (convo: Conversation) => {
+    if (!user) return 0;
+    
+    // If the last message was sent by the current user, there are no unread messages for them
+    if (convo.lastSenderId === user.uid) {
+      return 0;
+    }
+    
+    const lastReadTimestamps = convo.lastReadTimestamps || {};
+    const userLastRead = lastReadTimestamps[user.uid];
+    
+    // If user has never read this conversation, check if there's any message
+    if (!userLastRead) {
+      // Return 1 if there's a last message from someone else (indicating unread conversation)
+      return convo.lastMessage ? 1 : 0;
+    }
+    
+    // If the last message timestamp is newer than user's last read, there are unread messages
+    if (convo.lastMessageTimestamp && convo.lastMessageTimestamp.toMillis() > userLastRead.toMillis()) {
+      // We can't get exact count without fetching all messages, so return indicator (1+)
+      return 1;
+    }
+    
+    return 0;
+  };
+
   const formatTimestamp = (timestamp: any) => {
     if (!timestamp) return '';
     
@@ -344,6 +470,56 @@ export default function MessagesPage() {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
+  };
+
+  // Get message read status for display
+  const getMessageStatus = (msg: Message) => {
+    if (msg.senderId !== user?.uid) return null; // Only show status for own messages
+    
+    const otherParticipantId = selectedConversation?.participants.find(p => p !== user?.uid);
+    if (!otherParticipantId) return 'sent';
+    
+    // Check if other user has read the message
+    if (msg.readBy && msg.readBy[otherParticipantId]) {
+      return 'read';
+    }
+    
+    // Message is delivered (sent successfully and conversation exists)
+    return msg.status || 'sent';
+  };
+
+  // Get availability status badge
+  const getAvailabilityBadge = (status: string) => {
+    switch (status) {
+      case 'available':
+        return { text: 'Available', variant: 'default' as const, color: 'bg-green-500' };
+      case 'away':
+        return { text: 'Away', variant: 'secondary' as const, color: 'bg-yellow-500' };
+      case 'not-available':
+        return { text: 'Not Available', variant: 'destructive' as const, color: 'bg-red-500' };
+      default:
+        return { text: 'Available', variant: 'default' as const, color: 'bg-green-500' };
+    }
+  };
+
+  // Render read receipt icon
+  const renderReadReceipt = (msg: Message) => {
+    const status = getMessageStatus(msg);
+    if (!status) return null;
+    
+    if (status === 'read') {
+      return (
+        <CheckCheck className="h-3 w-3 inline ml-1 text-blue-500 dark:text-blue-400" />
+      );
+    } else if (status === 'delivered') {
+      return (
+        <CheckCheck className="h-3 w-3 inline ml-1 opacity-70" />
+      );
+    } else {
+      return (
+        <Check className="h-3 w-3 inline ml-1 opacity-70" />
+      );
+    }
   };
 
   if (loading) {
@@ -390,28 +566,35 @@ export default function MessagesPage() {
                         const otherParticipantInfo = otherParticipantId ? convo.participantDetails[otherParticipantId] : null;
                         const otherParticipantName = otherParticipantInfo?.name || 'Unknown';
                         const avatarUrl = otherParticipantId ? participantAvatars[otherParticipantId] : '';
+                        const isUnread = isConversationUnread(convo);
+                        const unreadCount = getUnreadCount(convo);
                         
                         return (
                           <button
                               key={convo.id}
                               onClick={() => setSelectedConversationId(convo.id)}
                               className={cn(
-                                  "flex w-full items-start gap-4 p-4 text-left hover:bg-accent transition-colors",
-                                  selectedConversationId === convo.id && 'bg-accent'
+                                  "flex w-full items-start gap-4 p-4 text-left hover:bg-accent transition-colors border-b",
+                                  selectedConversationId === convo.id && 'bg-accent border-l-4 border-l-primary'
                               )}
                           >
-                              <Avatar className="h-10 w-10 border-2 border-primary/20">
+                              <Avatar className="h-10 w-10 border-2 border-primary/20 flex-shrink-0">
                                   <AvatarImage src={avatarUrl} alt={otherParticipantName} />
                                   <AvatarFallback>{otherParticipantName.substring(0,2).toUpperCase()}</AvatarFallback>
                               </Avatar>
-                              <div className="flex-grow overflow-hidden">
-                                  <div className="flex justify-between items-center">
-                                      <p className="font-semibold truncate">{otherParticipantName}</p>
-                                      <p className="text-xs text-muted-foreground">{formatTimestamp(convo.lastMessageTimestamp)}</p>
+                              <div className="flex-1 min-w-0">
+                                  <div className="flex justify-between items-center gap-2 mb-1">
+                                      <p className={cn("font-semibold truncate flex-1", isUnread && "font-bold")}>{otherParticipantName}</p>
+                                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                        <p className="text-xs text-muted-foreground whitespace-nowrap">{formatTimestamp(convo.lastMessageTimestamp)}</p>
+                                        {unreadCount > 0 && (
+                                          <Badge variant="destructive" className="h-5 min-w-[20px] px-1 rounded-full flex items-center justify-center text-xs font-bold">
+                                            {unreadCount}
+                                          </Badge>
+                                        )}
+                                      </div>
                                   </div>
-                                  <div className="flex justify-between items-center mt-1">
-                                      <p className="text-sm text-muted-foreground truncate">{convo.lastMessage || 'No messages yet'}</p>
-                                  </div>
+                                  <p className={cn("text-sm text-muted-foreground truncate", isUnread && "font-semibold text-foreground")}>{convo.lastMessage || 'No messages yet'}</p>
                               </div>
                           </button>
                         );
@@ -429,9 +612,32 @@ export default function MessagesPage() {
                                 <AvatarImage src={otherParticipantId ? participantAvatars[otherParticipantId] : ''} alt={otherParticipant.name} />
                                 <AvatarFallback>{otherParticipant.name.substring(0,2).toUpperCase()}</AvatarFallback>
                             </Avatar>
-                            <div>
-                                <p className="font-bold">{otherParticipant.name}</p>
-                                <p className="text-sm text-muted-foreground">{otherParticipant.role}</p>
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-bold">{otherParticipant.name}</p>
+                                  {getUnreadCount(selectedConversation) > 0 && (
+                                    <Badge variant="destructive" className="h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center text-xs font-bold">
+                                      {getUnreadCount(selectedConversation)} unread
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm text-muted-foreground">{otherParticipant.role}</p>
+                                  {otherParticipantId && participantAvailability[otherParticipantId] && (
+                                    <Badge 
+                                      variant={getAvailabilityBadge(participantAvailability[otherParticipantId]).variant}
+                                      className="text-xs flex items-center gap-1"
+                                    >
+                                      <span 
+                                        className={cn(
+                                          "h-2 w-2 rounded-full",
+                                          getAvailabilityBadge(participantAvailability[otherParticipantId]).color
+                                        )}
+                                      />
+                                      {getAvailabilityBadge(participantAvailability[otherParticipantId]).text}
+                                    </Badge>
+                                  )}
+                                </div>
                             </div>
                         </div>
                         
@@ -451,7 +657,9 @@ export default function MessagesPage() {
                                         )}
                                         <div className={cn(
                                             "max-w-xs md:max-w-md lg:max-w-lg p-3 rounded-lg",
-                                            isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-background'
+                                            isCurrentUser 
+                                              ? 'bg-primary text-primary-foreground dark:bg-primary/90' 
+                                              : 'bg-muted text-foreground dark:bg-muted/80'
                                         )}>
                                             {msg.fileUrl && (
                                               <a 
@@ -459,8 +667,10 @@ export default function MessagesPage() {
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
                                                 className={cn(
-                                                  "flex items-center gap-2 mb-2 p-2 rounded border",
-                                                  isCurrentUser ? 'border-primary-foreground/20 hover:bg-primary-foreground/10' : 'border-border hover:bg-accent'
+                                                  "flex items-center gap-2 mb-2 p-2 rounded border transition-colors",
+                                                  isCurrentUser 
+                                                    ? 'border-primary-foreground/20 hover:bg-primary-foreground/10' 
+                                                    : 'border-border hover:bg-accent'
                                                 )}
                                               >
                                                 <FileText className="h-4 w-4" />
@@ -469,10 +679,18 @@ export default function MessagesPage() {
                                               </a>
                                             )}
                                             {msg.text && <p className="text-sm">{msg.text}</p>}
-                                            <p className={cn(
-                                                "text-xs mt-1",
-                                                isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                                            )}>{formatTimestamp(msg.createdAt)}</p>
+                                            <div className="flex items-center justify-between mt-1">
+                                              <p className={cn(
+                                                  "text-xs opacity-70"
+                                              )}>
+                                                {formatTimestamp(msg.createdAt)}
+                                              </p>
+                                              {isCurrentUser && (
+                                                <span className="text-xs">
+                                                  {renderReadReceipt(msg)}
+                                                </span>
+                                              )}
+                                            </div>
                                         </div>
                                     </div>
                                   );
@@ -535,10 +753,12 @@ export default function MessagesPage() {
                         </div>
                     </>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                        <MessageSquare className="h-16 w-16 mb-4"/>
-                        <p className="text-lg">Select a conversation</p>
-                        <p>Choose one of your contacts to start chatting.</p>
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8">
+                        <div className="rounded-full bg-primary/10 p-6 mb-4">
+                          <MessageSquare className="h-16 w-16 text-primary"/>
+                        </div>
+                        <h3 className="text-xl font-semibold text-foreground mb-2">Select a conversation</h3>
+                        <p className="text-sm max-w-md">Choose a conversation from the left to view messages and continue chatting with clients.</p>
                     </div>
                 )}
             </div>
