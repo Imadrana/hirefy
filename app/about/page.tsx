@@ -46,93 +46,165 @@
 // -------------------------------
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Building, Target, Users, Heart } from 'lucide-react';
+import { Building, Target, Users, Heart, Sparkles, Rocket, Shield, Zap } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 const ValueCard = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => (
-  <div className="flex flex-col items-center text-center p-4">
-    <div className="mb-4 text-primary bg-primary/10 p-3 rounded-full">
-      {icon}
-    </div>
-    <h3 className="font-bold text-lg mb-2">{title}</h3>
-    <p className="text-muted-foreground text-sm">{description}</p>
-  </div>
+  <Card className="group hover:shadow-2xl hover:scale-105 transition-all duration-300 border-2 hover:border-primary/50 bg-gradient-to-br from-card to-card/50">
+    <CardContent className="flex flex-col items-center text-center p-6">
+      <div className="mb-4 text-primary bg-gradient-to-br from-primary/20 to-primary/5 p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300 shadow-lg">
+        {icon}
+      </div>
+      <h3 className="font-bold text-xl mb-3 group-hover:text-primary transition-colors">{title}</h3>
+      <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
+    </CardContent>
+  </Card>
 );
 
 export default function AboutPage() {
   return (
-    <div className="bg-background text-foreground">
-      <section className="py-20 md:py-32 bg-grid-pattern">
-        <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-headline font-extrabold tracking-tight">
+    <div className="bg-background text-foreground overflow-hidden">
+      {/* Hero Section with Gradient Background */}
+      <section className="relative py-20 md:py-32 bg-gradient-to-br from-primary/10 via-background to-primary/5">
+        <div className="absolute inset-0 bg-grid-pattern opacity-50"></div>
+        <div className="container mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6 animate-in fade-in-0 slide-in-from-top-4 duration-500">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">Building Canada's Tech Future</span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-headline font-extrabold tracking-tight bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent animate-in fade-in-0 slide-in-from-bottom-6 duration-700">
             We're building the future of work in Canada.
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-            Hirefy is more than just a platform; it's a community dedicated to empowering IT professionals and connecting businesses with the talent they need to succeed, starting right here in Calgary.
+          <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-in fade-in-0 slide-in-from-bottom-8 duration-1000">
+            Hirefy is more than just a platform; it's a <span className="text-primary font-semibold">community</span> dedicated to empowering IT professionals and connecting businesses with the talent they need to succeed, starting right here in <span className="text-primary font-semibold">Calgary</span>.
           </p>
+          <div className="mt-8 flex gap-4 justify-center animate-in fade-in-0 slide-in-from-bottom-10 duration-1000">
+            <Button asChild size="lg" className="font-bold shadow-lg hover:shadow-xl transition-all">
+              <Link href="/register">Get Started <Rocket className="ml-2 h-5 w-5" /></Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="font-bold shadow-md hover:shadow-lg transition-all">
+              <Link href="/contact">Contact Us</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+      {/* Our Story Section with Enhanced Design */}
+      <section className="py-20 md:py-32 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent"></div>
+        <div className="container mx-auto relative z-10">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
             <div className="animate-in fade-in-0 slide-in-from-left-12 duration-500">
-              <h2 className="text-3xl font-headline font-bold mb-4">Our Story</h2>
-              <p className="text-muted-foreground mb-4">
-                Founded in Calgary, Hirefy was born from a simple observation: a wealth of incredible IT talent was disconnected from the businesses that needed them most. We saw an opportunity to bridge this gap, creating a localized, on-demand marketplace that fosters community, trust, and mutual success.
-              </p>
-              <p className="text-muted-foreground">
-                Our journey started with a focus on our city, with a vision to expand nationwide. We believe in the power of local expertise and are committed to building a robust, proudly Canadian network of IT professionals and clients.
-              </p>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full mb-4">
+                <Building className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-primary">Our Journey</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-headline font-bold mb-6 bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                Our Story
+              </h2>
+              <div className="space-y-4">
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Founded in <span className="text-primary font-semibold">Calgary</span>, Hirefy was born from a simple observation: a wealth of incredible IT talent was disconnected from the businesses that needed them most. We saw an opportunity to bridge this gap, creating a localized, on-demand marketplace that fosters community, trust, and mutual success.
+                </p>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Our journey started with a focus on our city, with a vision to expand nationwide. We believe in the power of local expertise and are committed to building a robust, proudly Canadian network of IT professionals and clients.
+                </p>
+              </div>
+              <div className="mt-8 flex gap-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary">500+</div>
+                  <div className="text-sm text-muted-foreground">Professionals</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary">200+</div>
+                  <div className="text-sm text-muted-foreground">Projects</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary">98%</div>
+                  <div className="text-sm text-muted-foreground">Satisfaction</div>
+                </div>
+              </div>
             </div>
-            <div className="animate-in fade-in-0 slide-in-from-right-12 duration-500">
-              <Image 
-                src="https://placehold.co/600x400.png"
-                alt="Our Team"
-                width={600}
-                height={400}
-                data-ai-hint="team collaboration"
-                className="rounded-lg shadow-xl"
-              />
+            <div className="animate-in fade-in-0 slide-in-from-right-12 duration-500 relative">
+              {/* Main Image with Decorative Elements */}
+              <div className="relative max-w-md mx-auto">
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-2xl blur-2xl"></div>
+                <div className="relative">
+                  <Image 
+                    src="/calgary-tech.png"
+                    alt="Calgary Tower with Technology Stack"
+                    width={400}
+                    height={300}
+                    className="rounded-2xl shadow-2xl w-full border-4 border-white/10 relative z-10"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
       
-      <section className="py-16 md:py-24 bg-card/50">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-headline font-bold">Our Core Values</h2>
-            <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">These principles guide every decision we make and every feature we build.</p>
+      {/* Core Values Section with Cards */}
+      <section className="py-20 md:py-32 bg-gradient-to-b from-card/30 to-background relative">
+        <div className="absolute inset-0 bg-grid-pattern opacity-30"></div>
+        <div className="container mx-auto relative z-10">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full mb-4">
+              <Shield className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-primary">What Drives Us</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-headline font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+              Our Core Values
+            </h2>
+            <p className="text-muted-foreground mt-4 text-lg max-w-2xl mx-auto">
+              These principles guide every decision we make and every feature we build.
+            </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <ValueCard 
-              icon={<Building size={28} />}
+              icon={<Building size={32} />}
               title="Community First"
-              description="We prioritize the growth and success of our local Calgary tech community."
+              description="We prioritize the growth and success of our local Calgary tech community, fostering connections and opportunities."
             />
             <ValueCard 
-              icon={<Heart size={28} />}
+              icon={<Heart size={32} />}
               title="Built on Trust"
-              description="Transparency, reliability, and integrity are the cornerstones of our platform."
+              description="Transparency, reliability, and integrity are the cornerstones of our platform and relationships."
             />
             <ValueCard 
-              icon={<Target size={28} />}
+              icon={<Target size={32} />}
               title="Empowering People"
-              description="We provide the tools and opportunities for professionals and clients to achieve their goals."
+              description="We provide the tools and opportunities for professionals and clients to achieve their ambitious goals."
             />
           </div>
         </div>
       </section>
 
-      <section className="py-20 text-center">
-        <div className="container mx-auto">
-           <h2 className="text-3xl md:text-4xl font-headline font-bold">Join the Hirefy Network</h2>
-           <p className="text-muted-foreground mt-2 mb-8 max-w-2xl mx-auto">Whether you're looking for your next project or the perfect talent, your journey starts here.</p>
-           <Button asChild size="lg" className="font-bold">
-            <Link href="/register">Get Started Today</Link>
-           </Button>
+      {/* CTA Section with Gradient */}
+      <section className="py-24 md:py-32 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-purple-500/20"></div>
+        <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
+        <div className="container mx-auto text-center relative z-10">
+          <div className="max-w-3xl mx-auto">
+            <Zap className="h-16 w-16 text-primary mx-auto mb-6 animate-pulse" />
+            <h2 className="text-4xl md:text-5xl font-headline font-bold mb-6 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+              Join the Hirefy Network
+            </h2>
+            <p className="text-muted-foreground text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
+              Whether you're looking for your next exciting project or the perfect talent to bring your vision to life, your journey starts here.
+            </p>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <Button asChild size="lg" className="font-bold text-lg px-8 py-6 shadow-2xl hover:shadow-primary/50 hover:scale-105 transition-all">
+                <Link href="/register">
+                  Get Started Today <Rocket className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="font-bold text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all">
+                <Link href="/contact">Learn More</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
     </div>
