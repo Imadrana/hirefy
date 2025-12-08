@@ -1,4 +1,3 @@
-//reference 
 /*Create a Next.js 14 client layout file at /app/dashboard/admin/layout.tsx with 'use client' at the top. Use React hooks, Tailwind CSS, and import useAuth from @/context/AuthContext, useRouter from next/navigation, useToast from @/hooks/use-toast, and the Loader2 icon from lucide-react.
 
 The layout should check if the user is authenticated and has the role of admin. If the user is missing or has a different role, show a destructive toast message “Access Denied” and redirect them to the correct page based on their role (/dashboard/client, /dashboard/professional, or /login).
