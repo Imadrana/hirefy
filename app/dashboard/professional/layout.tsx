@@ -43,7 +43,8 @@
 // - Side: Frontend Page (Client-side)
 // - Libraries Used: Next.js, TailwindCSS, lucide-react
 // - Purpose: Display About content for Hirefy with story, values, and CTA
-// -------------------------------'use client';
+// -------------------------------
+'use client';
 
 import { useAuth, type UserData } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
