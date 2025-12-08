@@ -1,4 +1,34 @@
-/*reference*/
+// ---------------------------------------------
+// Developer Reference Notes
+// ---------------------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware
+// Members: Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar, Anandjit Kaur
+// File: app/manage-jobs/page.tsx
+//
+// Description:
+// - “My Jobs” dashboard for professionals to see all jobs where their proposal was accepted.
+// - Listens to the Firestore `proposals` collection filtered by professionalId, then narrows
+//   down to proposals with status "accepted".
+// - For each accepted proposal, fetches the related job from `jobs` and client details from `users`.
+// - Displays each job with client name, skills, your rate, duration, and a details dialog.
+//
+// Development Process & Key Learnings:
+// - Practiced chaining Firestore queries with additional document lookups (proposals → job → client).
+// - Implemented client-side filtering on the snapshot to only keep accepted proposals.
+// - Used a simple `getTimeAgo` utility to show when a job was accepted in human-friendly text.
+// - Structured the layout using shadcn/ui Card, Badge, Button, and a Dialog for deeper job info.
+// - Focused on good UX for the “no jobs yet” state and loading state.
+//
+// References & Resources Used:
+// • Firestore filtered queries & real-time snapshots: https://firebase.google.com/docs/firestore/query-data/queries  
+// • Firestore document reads with getDoc/doc: https://firebase.google.com/docs/firestore/query-data/get-data  
+// • shadcn/ui components (Card, Badge, Button, Dialog): https://ui.shadcn.com  
+// • Lucide React Icons (Briefcase, Loader2, Eye, DollarSign, Clock, User, FileText): https://lucide.dev/icons  
+// • TailwindCSS for spacing, flex layouts, and responsiveness: https://tailwindcss.com/docs  
+// ---------------------------------------------
+
 'use client';
 
 import { useEffect, useState } from "react";
