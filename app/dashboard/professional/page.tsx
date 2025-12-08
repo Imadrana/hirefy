@@ -1,12 +1,49 @@
-/*Create a modern Next.js 14 dashboard page located at /app/dashboard/professional/page.tsx with 'use client' at the top. Use Tailwind CSS for layout and components from @/components/ui/ like Card, Button, and Separator. Import icons from lucide-react and useAuth() from @/context/AuthContext.
-
-Display a welcome section showing the user’s name from useAuth(). Below that, add a grid of four statistic cards (Active Jobs, Invitations, Profile Views, Active Proposals) with icons and short descriptions.
-
-If the user’s profile is incomplete (userData.profile.isComplete === false), show a red alert card with an AlertCircle icon and a “Complete Your Profile” message, including a red button linking to /dashboard/professional/profile.
-
-After a separator, include two larger cards: one for “Recent Activity” showing sample updates with timestamps, and another encouraging the user to “Find New Jobs,” with a button linking to /dashboard/professional/find-jobs.
-
-The design should look clean, responsive, and professional with clear spacing, rounded corners, and a friendly dashboard layout.*/
+// -------------------------------
+//  Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware 
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: app/about   File: page.tsx
+//
+// Description:
+// - Front-end React (TypeScript/TSX) page for the Hirefy About section
+// - Displays company story, mission, and core values
+// - Uses reusable UI components: Button, Card, and ValueCard
+// - Includes responsive design using TailwindCSS utilities
+// - Sections: Hero, Story (with image), Core Values, and CTA
+//
+// Technical Understanding & Research Summary:
+// - Learned about Next.js pages structure and how files in /app folder map to routes
+// - Studied TailwindCSS grid, spacing, and responsive design techniques
+// - Used lucide-react for SVG icons (Building, Heart, Target, etc.)
+// - Implemented reusable subcomponent (ValueCard) to avoid code duplication
+// - Used Next.js Image for optimized rendering of images
+//
+// References / Tutorials:
+// • Next.js Pages Routing: https://nextjs.org/docs/app/building-your-application/routing
+// • TailwindCSS Utilities: https://tailwindcss.com/docs
+// • Lucide Icons: https://lucide.dev
+//
+// -------------------------------
+// ChatGPT Prompt Used
+// -------------------------------
+//
+// "I need you to create an AboutPage for my Hirefy web application. 
+// The page should include a hero section, a story section with text and an image, 
+// a core values section using reusable value cards with icons, 
+// and a call-to-action with a button. Use Next.js with TypeScript/TSX, 
+// TailwindCSS for styling, and import UI components like Card and Button. 
+// The layout should be fully responsive and visually engaging."
+//
+// -------------------------------
+// Summary:
+// - Language: TypeScript / TSX (React + Next.js)
+// - Side: Frontend Page (Client-side)
+// - Libraries Used: Next.js, TailwindCSS, lucide-react
+// - Purpose: Display About content for Hirefy with story, values, and CTA
+// -------------------------------
 //Updated admin/proffessional/page.tsx
 'use client';
 
