@@ -1,13 +1,49 @@
-/*Create a Next.js 14 client layout file at /app/dashboard/professional/layout.tsx with 'use client' at the top. Use Tailwind CSS, React hooks, and components from @/components/ui/sidebar. Import useAuth from @/context/AuthContext, useRouter and usePathname from next/navigation, useToast from @/hooks/use-toast, and icons from lucide-react.
-
-Build a sidebar for professional users with menu links: Dashboard, Find Jobs, My Jobs, Messages, My Profile, and Settings — each with an icon and label. The active link should be highlighted using the current pathname.
-
-Use SidebarProvider, Sidebar, SidebarMenu, SidebarMenuItem, SidebarMenuButton, and SidebarInset to structure the layout. Show a small header at the top of the sidebar labeled “Professional Dashboard.”
-
-In the main ProfessionalLayout component, check authentication and role using useAuth. If the user is not logged in or not a professional, show a destructive toast saying “Access Denied” and redirect them to the correct dashboard route (/login, /dashboard/admin, or /dashboard/client).
-
-While authentication is loading, display a centered loading spinner using the Loader2 icon. Once authenticated, render the sidebar and the page content (children) inside a responsive layout with padding and spacing. The design should be clean, modern, and consistent with a professional dashboard style.*/
-'use client';
+// -------------------------------
+//  Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware 
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: app/about   File: page.tsx
+//
+// Description:
+// - Front-end React (TypeScript/TSX) page for the Hirefy About section
+// - Displays company story, mission, and core values
+// - Uses reusable UI components: Button, Card, and ValueCard
+// - Includes responsive design using TailwindCSS utilities
+// - Sections: Hero, Story (with image), Core Values, and CTA
+//
+// Technical Understanding & Research Summary:
+// - Learned about Next.js pages structure and how files in /app folder map to routes
+// - Studied TailwindCSS grid, spacing, and responsive design techniques
+// - Used lucide-react for SVG icons (Building, Heart, Target, etc.)
+// - Implemented reusable subcomponent (ValueCard) to avoid code duplication
+// - Used Next.js Image for optimized rendering of images
+//
+// References / Tutorials:
+// • Next.js Pages Routing: https://nextjs.org/docs/app/building-your-application/routing
+// • TailwindCSS Utilities: https://tailwindcss.com/docs
+// • Lucide Icons: https://lucide.dev
+//
+// -------------------------------
+// ChatGPT Prompt Used
+// -------------------------------
+//
+// "I need you to create an AboutPage for my Hirefy web application. 
+// The page should include a hero section, a story section with text and an image, 
+// a core values section using reusable value cards with icons, 
+// and a call-to-action with a button. Use Next.js with TypeScript/TSX, 
+// TailwindCSS for styling, and import UI components like Card and Button. 
+// The layout should be fully responsive and visually engaging."
+//
+// -------------------------------
+// Summary:
+// - Language: TypeScript / TSX (React + Next.js)
+// - Side: Frontend Page (Client-side)
+// - Libraries Used: Next.js, TailwindCSS, lucide-react
+// - Purpose: Display About content for Hirefy with story, values, and CTA
+// -------------------------------'use client';
 
 import { useAuth, type UserData } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
