@@ -1,3 +1,37 @@
+// ---------------------------------------------
+// Developer Reference Notes (Revision 2)
+// ---------------------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// File: app/manage-jobs/page.tsx
+//
+// High-Level Purpose:
+// - Shows all jobs where the professional has already been hired (accepted proposals).
+// - Acts as a “My Jobs” dashboard so users can quickly review job details and their proposal.
+//
+// Key Implementation Details:
+// - Listens to the `proposals` collection in Firestore filtered by the current professional’s UID.
+// - Filters the snapshot client-side to only keep proposals with `status === "accepted"`.
+// - For each accepted proposal, loads extra job info from `jobs/{jobId}` and client info from `users/{clientId}`.
+// - Combines proposal + job + client data into a single `AcceptedJob` object stored in local state.
+// - Sorts jobs by `acceptedAt` (or createdAt fallback) so the most recent accepted work shows first.
+// - Uses a small `getTimeAgo` helper to display “Accepted X days/weeks ago” text.
+//
+// UI / UX Notes:
+// - Cards show job title, client, short description, a few skills, your accepted rate, and duration.
+// - A badge highlights the “Accepted” status, and a “View Details” button opens a dialog.
+// - The dialog summarizes budget, your rate, duration, skills, and the original cover letter you sent.
+// - Loading and empty states are handled to make the page feel complete even with no jobs yet.
+//
+// References & Resources Used:
+// • Firestore queries and snapshots: https://firebase.google.com/docs/firestore/query-data/queries  
+// • Firestore document lookups (getDoc / doc): https://firebase.google.com/docs/firestore/query-data/get-data  
+// • shadcn/ui components (Card, Badge, Button, Dialog): https://ui.shadcn.com  
+// • Lucide React icons used here (Briefcase, Loader2, Eye, DollarSign, Clock, User, FileText): https://lucide.dev/icons  
+// • TailwindCSS flex/grid layout patterns: https://tailwindcss.com/docs  
+// ---------------------------------------------
 'use client';
 
 import { useForm } from 'react-hook-form';
