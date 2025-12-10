@@ -4,7 +4,7 @@
 //
 // Project: Hirefy – On-Demand IT Service Platform
 // Group: S-Ware 
-// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Members: Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
 // Folder: app/about   File: page.tsx
 //
 // Description:
