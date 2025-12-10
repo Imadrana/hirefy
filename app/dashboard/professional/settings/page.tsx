@@ -29,458 +29,521 @@
 // • TailwindCSS for spacing, grid, and responsive layout: https://tailwindcss.com/docs  
 // ---------------------------------------------
 
+
 'use client';
 
-import React, { useState, createContext, useContext } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Switch } from '../../../components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Settings, User, Bell, Lock, Banknote, Landmark } from 'lucide-react';
+import { Settings, Bell, Ticket, MessageSquare, Trash2, User, Clock, Send, Loader2, AlertTriangle, History } from 'lucide-react';
+import { doc, getDoc, updateDoc, addDoc, collection, query, where, orderBy, getDocs, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/firebase';
+import { Badge } from '@/components/ui/badge';
 
-/* Local lightweight Tabs implementation as a fallback for '@/components/ui/tabs' */
-type TabsContextType = { value: string | null; setValue: (v: string) => void };
-const TabsContext = createContext<TabsContextType | undefined>(undefined);
-
-function Tabs({ defaultValue, children, className }: { defaultValue?: string; children: React.ReactNode; className?: string }) {
-  const [value, setValue] = useState<string | null>(defaultValue ?? null);
-  return <TabsContext.Provider value={{ value, setValue }}>{children}</TabsContext.Provider>;
+interface SupportTicket {
+  id: string;
+  subject: string;
+  description: string;
+  status: 'open' | 'in-progress' | 'resolved' | 'closed';
+  createdAt: any;
+  updatedAt: any;
 }
 
-function TabsList({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div role="tablist" className={className}>{children}</div>;
+interface UserSettings {
+  messageSoundEnabled: boolean;
+  availabilityStatus: 'available' | 'not-available' | 'away';
 }
 
-function TabsTrigger({ value, children }: { value: string; children: React.ReactNode }) {
-  const ctx = useContext(TabsContext);
-  if (!ctx) return null;
-  const selected = ctx.value === value;
-  return (
-    <button
-      role="tab"
-      aria-selected={selected}
-      onClick={() => ctx.setValue(value)}
-      className={`inline-flex items-center gap-2 px-3 py-1 rounded ${selected ? 'font-medium' : 'text-muted-foreground'}`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function TabsContent({ value, children }: { value: string; children: React.ReactNode }) {
-  const ctx = useContext(TabsContext);
-  if (!ctx) return null;
-  return ctx.value === value ? <div>{children}</div> : null;
-}
-
-/* Local lightweight Switch component as a fallback for '@/components/ui/switch' */
-const Switch = ({
-  checked,
-  onCheckedChange,
-  disabled = false,
-  className = '',
-}: {
-  checked: boolean;
-  onCheckedChange: (v: boolean) => void;
-  disabled?: boolean;
-  className?: string;
-}) => {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => onCheckedChange(!checked)}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${checked ? 'bg-primary' : 'bg-gray-200'} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
-    >
-      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-1'}`} />
-    </button>
-  );
-};
-
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-// --- ZOD Schemas ---
-const profileSchema = z.object({
-  fullName: z.string().min(2, 'Name is required.'),
-  email: z.string().email('Invalid email address.'),
-  timezone: z.string().min(1, 'Timezone is required.'),
-});
-
-const passwordSchema = z
-  .object({
-    currentPassword: z.string().min(6, 'Current password is required.'),
-    newPassword: z.string().min(6, 'New password must be at least 6 characters.'),
-    confirmPassword: z.string().min(6, 'Please confirm your new password.'),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'New passwords do not match.',
-    path: ['confirmPassword'],
-  });
-
-const notificationsSchema = z.object({
-  emailOnNewJob: z.boolean(),
-  emailOnInvitation: z.boolean(),
-  emailOnMessage: z.boolean(),
-  emailMarketing: z.boolean(),
-});
-
-const payoutSchema = z.object({
-  bankName: z.string().min(2, 'Bank name is required.'),
-  institutionNumber: z.string().length(3, 'Institution number must be 3 digits.'),
-  transitNumber: z.string().length(5, 'Transit number must be 5 digits.'),
-  accountNumber: z.string().min(5, 'Account number is required (min 5 digits).'),
-});
-
-// --- Types ---
-type ProfileFormValues = z.infer<typeof profileSchema>;
-type PasswordFormValues = z.infer<typeof passwordSchema>;
-type NotificationsFormValues = z.infer<typeof notificationsSchema>;
-type PayoutFormValues = z.infer<typeof payoutSchema>;
-
-// --- Mock Data ---
-const currentSettings: ProfileFormValues = {
-  fullName: 'Alex Johnson',
-  email: 'alex.johnson@example.com',
-  timezone: 'America/Edmonton',
-};
-
-const currentNotifications: NotificationsFormValues = {
-  emailOnNewJob: true,
-  emailOnInvitation: true,
-  emailOnMessage: true,
-  emailMarketing: false,
-};
-
-const currentPayoutDetails = {
-  bankName: 'TD Canada Trust',
-  maskedAccountNumber: '••••••••1234',
-};
-
-// --- Component ---
-export default function SettingsPage() {
+export default function ProfessionalSettingsPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
-
-  const [loadingProfile, setLoadingProfile] = useState(false);
-  const [loadingPassword, setLoadingPassword] = useState(false);
-  const [loadingNotifications, setLoadingNotifications] = useState(false);
-  const [loadingPayout, setLoadingPayout] = useState(false);
-
-  // Forms
-  const profileForm = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: currentSettings,
+  
+  const [settings, setSettings] = useState<UserSettings>({
+    messageSoundEnabled: true,
+    availabilityStatus: 'available',
   });
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  
+  // Form states
+  const [ticketSubject, setTicketSubject] = useState('');
+  const [ticketDescription, setTicketDescription] = useState('');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
 
-  const passwordForm = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordSchema),
-    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
-  });
+  // Load user settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!user) return;
+      
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setSettings({
+            messageSoundEnabled: data.messageSoundEnabled ?? true,
+            availabilityStatus: data.availabilityStatus || 'available',
+          });
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const notificationsForm = useForm<NotificationsFormValues>({
-    resolver: zodResolver(notificationsSchema),
-    defaultValues: currentNotifications,
-  });
+    loadSettings();
+  }, [user]);
 
-  const payoutForm = useForm<PayoutFormValues>({
-    resolver: zodResolver(payoutSchema),
-    defaultValues: { bankName: '', institutionNumber: '', transitNumber: '', accountNumber: '' },
-  });
-
-  // --- Submit Handlers ---
-  const handleProfileSubmit = async (values: ProfileFormValues) => {
-    setLoadingProfile(true);
-    console.log('Profile:', values);
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoadingProfile(false);
-    toast({ title: 'Profile Updated', description: 'Your profile information has been saved.' });
+  // Load support tickets
+  const loadTickets = async () => {
+    if (!user) return;
+    
+    try {
+      const ticketsQuery = query(
+        collection(db, 'supportTickets'),
+        where('userId', '==', user.uid),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const snapshot = await getDocs(ticketsQuery);
+      const ticketsList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as SupportTicket[];
+      
+      setTickets(ticketsList);
+    } catch (error) {
+      console.error('Error loading tickets:', error);
+    }
   };
 
-  const handlePasswordSubmit = async (values: PasswordFormValues) => {
-    setLoadingPassword(true);
-    console.log('Password:', values);
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoadingPassword(false);
-    passwordForm.reset();
-    toast({ title: 'Password Updated', description: 'Your password has been changed successfully.' });
+  // Update settings in Firestore
+  const updateSettings = async (newSettings: Partial<UserSettings>) => {
+    if (!user) return;
+    
+    try {
+      await updateDoc(doc(db, 'users', user.uid), newSettings);
+      setSettings({ ...settings, ...newSettings });
+      toast({
+        title: 'Settings Updated',
+        description: 'Your preferences have been saved.',
+      });
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update settings.',
+      });
+    }
   };
 
-  const handleNotificationsSubmit = async (values: NotificationsFormValues) => {
-    setLoadingNotifications(true);
-    console.log('Notifications:', values);
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoadingNotifications(false);
-    toast({ title: 'Notifications Updated', description: 'Notification preferences saved.' });
+  // Submit support ticket
+  const handleSubmitTicket = async () => {
+    if (!user || !ticketSubject.trim() || !ticketDescription.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please fill in all fields.',
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await addDoc(collection(db, 'supportTickets'), {
+        userId: user.uid,
+        userEmail: user.email,
+        userName: user.displayName || 'Professional User',
+        userRole: 'professional',
+        subject: ticketSubject,
+        description: ticketDescription,
+        status: 'open',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+
+      toast({
+        title: 'Ticket Submitted',
+        description: 'Our support team will respond soon.',
+      });
+
+      setTicketSubject('');
+      setTicketDescription('');
+      setTicketDialogOpen(false);
+    } catch (error) {
+      console.error('Error submitting ticket:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to submit ticket.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handlePayoutSubmit = async (values: PayoutFormValues) => {
-    setLoadingPayout(true);
-    console.log('Payout:', values);
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoadingPayout(false);
-    payoutForm.reset();
-    toast({ title: 'Payout Updated', description: 'Banking information has been saved.' });
+  // Submit feedback
+  const handleSubmitFeedback = async () => {
+    if (!user || !feedbackMessage.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please enter your feedback.',
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await addDoc(collection(db, 'feedback'), {
+        userId: user.uid,
+        userEmail: user.email,
+        userName: user.displayName || 'Professional User',
+        userRole: 'professional',
+        message: feedbackMessage,
+        createdAt: new Date().toISOString(),
+      });
+
+      toast({
+        title: 'Feedback Submitted',
+        description: 'Thank you for your feedback!',
+      });
+
+      setFeedbackMessage('');
+      setFeedbackDialogOpen(false);
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to submit feedback.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  // --- Render ---
+  // Delete account
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'DELETE') {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Please type DELETE to confirm.',
+      });
+      return;
+    }
+
+    if (!user) return;
+
+    setSubmitting(true);
+    try {
+      // Mark account as deleted (actual deletion should be handled by admin/backend)
+      await updateDoc(doc(db, 'users', user.uid), {
+        accountDeleted: true,
+        deletedAt: new Date().toISOString(),
+      });
+
+      toast({
+        title: 'Account Deletion Requested',
+        description: 'Your account will be deleted within 24 hours.',
+      });
+
+      // Sign out user
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete account.',
+      });
+    } finally {
+      setSubmitting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, 'default' | 'secondary' | 'destructive'> = {
+      open: 'default',
+      'in-progress': 'secondary',
+      resolved: 'secondary',
+      closed: 'destructive',
+    };
+    
+    return <Badge variant={variants[status] || 'default'}>{status}</Badge>;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading settings...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-headline font-bold flex items-center gap-2">
-          <Settings className="h-8 w-8 text-primary" /> Account Settings
+      <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-6 border-2 border-primary/20">
+        <h1 className="text-4xl font-headline font-bold flex items-center gap-3 bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+          <Settings className="h-10 w-10 text-primary" /> Settings
         </h1>
-        <p className="text-muted-foreground">
-          Manage your profile, payouts, and notification preferences.
-        </p>
+        <p className="text-muted-foreground mt-2 text-lg">Manage your account preferences, notifications, and support.</p>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="profile"><User className="mr-2" /> Profile</TabsTrigger>
-          <TabsTrigger value="payouts"><Banknote className="mr-2" /> Payouts</TabsTrigger>
-          <TabsTrigger value="notifications"><Bell className="mr-2" /> Notifications</TabsTrigger>
-          <TabsTrigger value="security"><Lock className="mr-2" /> Security</TabsTrigger>
-        </TabsList>
+      {/* Availability Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" /> Availability Status
+          </CardTitle>
+          <CardDescription>Let clients know when you're available for work.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup
+            value={settings.availabilityStatus}
+            onValueChange={(value) => updateSettings({ availabilityStatus: value as any })}
+          >
+            <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent">
+              <RadioGroupItem value="available" id="available" />
+              <Label htmlFor="available" className="flex-1 cursor-pointer">
+                <div className="font-medium">Available Now</div>
+                <div className="text-sm text-muted-foreground">You're ready to take on new projects and respond to messages</div>
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent">
+              <RadioGroupItem value="not-available" id="not-available" />
+              <Label htmlFor="not-available" className="flex-1 cursor-pointer">
+                <div className="font-medium">Not Available</div>
+                <div className="text-sm text-muted-foreground">You're busy with current projects and may not respond immediately</div>
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-accent">
+              <RadioGroupItem value="away" id="away" />
+              <Label htmlFor="away" className="flex-1 cursor-pointer">
+                <div className="font-medium">Away / Vacation Mode</div>
+                <div className="text-sm text-muted-foreground">You're away and won't be taking new work or responding</div>
+              </Label>
+            </div>
+          </RadioGroup>
+        </CardContent>
+      </Card>
 
-        {/* PROFILE */}
-        <TabsContent value="profile">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-              <CardDescription>Private info, not displayed publicly.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4 max-w-lg">
-                <FormField
-                  control={profileForm.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl><Input placeholder="Your Name" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={profileForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email Address</FormLabel>
-                      <FormControl><Input placeholder="you@example.com" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={profileForm.control}
-                  name="timezone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Timezone</FormLabel>
-                      <FormControl>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger><SelectValue placeholder="Select timezone" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="America/Edmonton">America/Edmonton</SelectItem>
-                            <SelectItem value="America/Vancouver">America/Vancouver</SelectItem>
-                            <SelectItem value="America/Winnipeg">America/Winnipeg</SelectItem>
-                            <SelectItem value="America/Toronto">America/Toronto</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={loadingProfile}>
-                  {loadingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save Changes
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {/* Notification Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" /> Notification Settings
+          </CardTitle>
+          <CardDescription>Manage how you receive notifications.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-3 rounded-lg border">
+            <div className="flex-1">
+              <Label htmlFor="message-sound" className="font-medium">Message Sound</Label>
+              <p className="text-sm text-muted-foreground">Play a sound when you receive new messages</p>
+            </div>
+            <Switch
+              id="message-sound"
+              checked={settings.messageSoundEnabled}
+              onCheckedChange={(checked: boolean) => updateSettings({ messageSoundEnabled: checked })}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* PAYOUTS */}
-        <TabsContent value="payouts">
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Payout Method</CardTitle>
-              <CardDescription>Current bank account used for payouts.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="border rounded-lg p-4 flex justify-between items-center bg-muted/30">
-                <div className="flex items-center gap-4">
-                  <Landmark className="h-8 w-8 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">{currentPayoutDetails.bankName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Account ending in {currentPayoutDetails.maskedAccountNumber.slice(-4)}
-                    </p>
-                  </div>
+      {/* Support & Feedback */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Ticket className="h-5 w-5" /> Support & Feedback
+          </CardTitle>
+          <CardDescription>Get help or share your thoughts with us.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Open Support Ticket */}
+          <Dialog open={ticketDialogOpen} onOpenChange={setTicketDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full justify-start">
+                <Ticket className="mr-2 h-4 w-4" />
+                Open Support Ticket
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Open Support Ticket</DialogTitle>
+                <DialogDescription>Describe your issue and our team will help you.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="subject">Subject</Label>
+                  <Input
+                    id="subject"
+                    placeholder="Brief description of your issue"
+                    value={ticketSubject}
+                    onChange={(e) => setTicketSubject(e.target.value)}
+                  />
                 </div>
-                <Button variant="outline" size="sm">Remove</Button>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Provide details about your issue"
+                    rows={5}
+                    value={ticketDescription}
+                    onChange={(e) => setTicketDescription(e.target.value)}
+                  />
+                </div>
               </div>
-            </CardContent>
-          </Card>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setTicketDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSubmitTicket} disabled={submitting}>
+                  {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                  Submit Ticket
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New Bank Account</CardTitle>
-              <CardDescription>Add banking details to receive payouts.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={payoutForm.handleSubmit(handlePayoutSubmit)} className="space-y-4 max-w-lg">
-                <FormField
-                  control={payoutForm.control}
-                  name="bankName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bank Name</FormLabel>
-                      <FormControl><Input placeholder="e.g., Royal Bank of Canada" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={payoutForm.control}
-                    name="institutionNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Institution No.</FormLabel>
-                        <FormControl><Input placeholder="003" {...field} inputMode="numeric" pattern="[0-9]*" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={payoutForm.control}
-                    name="transitNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Transit No.</FormLabel>
-                        <FormControl><Input placeholder="00000" {...field} inputMode="numeric" pattern="[0-9]*" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+          {/* View Ticket History */}
+          <Dialog open={historyDialogOpen} onOpenChange={(open) => {
+            setHistoryDialogOpen(open);
+            if (open) loadTickets();
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full justify-start">
+                <History className="mr-2 h-4 w-4" />
+                View Ticket History
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[600px] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Support Ticket History</DialogTitle>
+                <DialogDescription>View all your previous support tickets.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                {tickets.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No tickets found.</p>
+                ) : (
+                  tickets.map((ticket) => (
+                    <div key={ticket.id} className="border rounded-lg p-4 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <h4 className="font-semibold">{ticket.subject}</h4>
+                        {getStatusBadge(ticket.status)}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{ticket.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Created: {new Date(ticket.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Submit Feedback */}
+          <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full justify-start">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Submit Feedback
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Submit Feedback</DialogTitle>
+                <DialogDescription>Share your thoughts, suggestions, or report issues.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="feedback">Your Feedback</Label>
+                  <Textarea
+                    id="feedback"
+                    placeholder="Tell us what you think..."
+                    rows={6}
+                    value={feedbackMessage}
+                    onChange={(e) => setFeedbackMessage(e.target.value)}
                   />
                 </div>
-                <FormField
-                  control={payoutForm.control}
-                  name="accountNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Account Number</FormLabel>
-                      <FormControl><Input placeholder="123456789" {...field} inputMode="numeric" pattern="[0-9]*" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={loadingPayout}>
-                  {loadingPayout && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Add Bank Account
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setFeedbackDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSubmitFeedback} disabled={submitting}>
+                  {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                  Submit Feedback
                 </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </CardContent>
+      </Card>
 
-        {/* NOTIFICATIONS */}
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Email Notifications</CardTitle>
-              <CardDescription>Manage how you receive notifications from Hirefy.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={notificationsForm.handleSubmit(handleNotificationsSubmit)} className="space-y-4 max-w-lg">
-                {Object.entries(currentNotifications).map(([key, _]) => (
-                  <FormField
-                    key={key}
-                    control={notificationsForm.control}
-                    name={key as keyof NotificationsFormValues}
-                    render={({ field }) => (
-                      <FormItem className="flex justify-between items-center border rounded-lg p-4">
-                        <FormLabel className="m-0">{key}</FormLabel>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                ))}
-                <Button type="submit" disabled={loadingNotifications}>
-                  {loadingNotifications && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save Preferences
+      {/* Danger Zone */}
+      <Card className="border-destructive">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="h-5 w-5" /> Danger Zone
+          </CardTitle>
+          <CardDescription>Irreversible actions for your account.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="destructive" className="w-full">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Account
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="text-destructive">Delete Account</DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. All your data will be permanently deleted.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm">To confirm deletion, please type <strong>DELETE</strong> below:</p>
+                <Input
+                  placeholder="Type DELETE to confirm"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={handleDeleteAccount} 
+                  disabled={submitting || deleteConfirmation !== 'DELETE'}
+                >
+                  {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                  Delete My Account
                 </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* SECURITY */}
-        <TabsContent value="security">
-          <Card>
-            <CardHeader>
-              <CardTitle>Change Password</CardTitle>
-              <CardDescription>Use a strong and unique password for security.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={passwordForm.handleSubmit(handlePasswordSubmit)} className="space-y-4 max-w-lg">
-                <FormField
-                  control={passwordForm.control}
-                  name="currentPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Password</FormLabel>
-                      <FormControl><Input type="password" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={passwordForm.control}
-                  name="newPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Password</FormLabel>
-                      <FormControl><Input type="password" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={passwordForm.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm New Password</FormLabel>
-                      <FormControl><Input type="password" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={loadingPassword}>
-                  {loadingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Change Password
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </CardContent>
+      </Card>
     </div>
   );
 }

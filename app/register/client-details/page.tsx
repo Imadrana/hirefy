@@ -48,7 +48,7 @@
 
 import { useState, useEffect } from 'react'; // React hooks for local state and lifecycle
 import { useRouter } from 'next/navigation'; // Next.js router for programmatic navigation (router.push)
-import { doc, setDoc } from 'firebase/firestore'; // Firestore helpers: get a doc ref and write/merge data
+import { doc, setDoc, getDoc } from 'firebase/firestore'; // Firestore helpers: get a doc ref and write/merge data
 import { useForm } from 'react-hook-form'; // Form state/validation management
 import { zodResolver } from '@hookform/resolvers/zod'; // Connects Zod schema validation into react-hook-form
 import * as z from 'zod'; // Zod: runtime schema validation + TS inference
@@ -79,18 +79,7 @@ export default function ClientDetailsPage() {
   const { toast } = useToast(); // Toast for success/error feedback
   const { user, loading: authLoading } = useAuth(); // Auth state from context
   const [loading, setLoading] = useState(false); // Local submission/loading state for the submit button
-
-  // Guard route: if auth is done loading and there is no user, notify and redirect to login.
-  useEffect(() => {
-    if (!authLoading && !user) {
-      toast({
-        variant: 'destructive',
-        title: 'Unauthorized',
-        description: 'You must be logged in to complete your profile.',
-      });
-      router.push('/login');
-    }
-  }, [user, authLoading, router, toast]);
+  const [dataLoading, setDataLoading] = useState(true); // Loading state for fetching existing data
 
   // Initialize react-hook-form:
   // - resolver: runs Zod validation on submit (and onChange/onBlur depending on RHF settings)
@@ -108,6 +97,58 @@ export default function ClientDetailsPage() {
     },
   });
 
+  // Guard route: if auth is done loading and there is no user, notify and redirect to login.
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast({
+        variant: 'destructive',
+        title: 'Unauthorized',
+        description: 'You must be logged in to complete your profile.',
+      });
+      router.push('/login');
+    }
+  }, [user, authLoading, router, toast]);
+
+  // Load existing profile data if available
+  useEffect(() => {
+    const loadProfileData = async () => {
+      if (!user) {
+        setDataLoading(false);
+        return;
+      }
+
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          
+          // If profile data exists, populate the form
+          if (data.companyName || data.address) {
+            form.reset({
+              companyName: data.companyName || '',
+              address: data.address || '',
+              city: data.city || '',
+              province: data.province || '',
+              postalCode: data.postalCode || '',
+              businessType: data.businessType || '',
+              companyDescription: data.companyDescription || data.bio || '',
+            });
+          }
+        }
+      } catch (error: any) {
+        console.error('Error loading profile data:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    if (!authLoading && user) {
+      loadProfileData();
+    }
+  }, [user, authLoading, form]);
+
   // Submit handler:
   // 1) Ensure user exists
   // 2) Write the profile into Firestore under users/{uid}, merging with existing doc
@@ -122,10 +163,21 @@ export default function ClientDetailsPage() {
     try {
       const userDocRef = doc(db, 'users', user.uid); // Build a reference to users/{uid}
       await setDoc(userDocRef, {
-        profile: {
-          ...values,
-          isComplete: true, // Flag that the profile has been completed
-        }
+        // Save data at root level, not under profile object
+        companyName: values.companyName,
+        address: values.address,
+        city: values.city,
+        province: values.province,
+        postalCode: values.postalCode,
+        businessType: values.businessType,
+        companyDescription: values.companyDescription,
+        // Also add compatibility fields
+        name: values.companyName,
+        bio: values.companyDescription,
+        role: 'client',
+        email: user.email,
+        isProfileComplete: true,
+        updatedAt: new Date().toISOString(),
       }, { merge: true }); // Merge so we don't overwrite other user fields
 
       toast({
@@ -146,8 +198,8 @@ export default function ClientDetailsPage() {
     }
   };
   
-  // While auth is resolving, show a centered spinner to avoid flicker/false redirects.
-  if (authLoading) {
+  // While auth is resolving or loading data, show a centered spinner to avoid flicker/false redirects.
+  if (authLoading || dataLoading) {
       return (
           <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
