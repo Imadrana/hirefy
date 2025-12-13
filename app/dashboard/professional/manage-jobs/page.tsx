@@ -7,27 +7,36 @@
 // Members: Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar, Anandjit Kaur
 // File: app/manage-jobs/page.tsx
 //
-// Description:
-// - “My Jobs” dashboard for professionals to see all jobs where their proposal was accepted.
-// - Listens to the Firestore `proposals` collection filtered by professionalId, then narrows
-//   down to proposals with status "accepted".
-// - For each accepted proposal, fetches the related job from `jobs` and client details from `users`.
-// - Displays each job with client name, skills, your rate, duration, and a details dialog.
+// What this page is for:
+// This page is basically the professional’s “My Jobs” dashboard. It shows the jobs I’ve been hired for
+// after a client accepts my proposal. Instead of showing every proposal, it focuses on the accepted ones,
+// so it feels like a real “active work” section.
 //
-// Development Process & Key Learnings:
-// - Practiced chaining Firestore queries with additional document lookups (proposals → job → client).
-// - Implemented client-side filtering on the snapshot to only keep accepted proposals.
-// - Used a simple `getTimeAgo` utility to show when a job was accepted in human-friendly text.
-// - Structured the layout using shadcn/ui Card, Badge, Button, and a Dialog for deeper job info.
-// - Focused on good UX for the “no jobs yet” state and loading state.
+// How it works (high level):
+// - First, it listens to the `proposals` collection in Firestore for the logged-in professional.
+// - Then, it filters down to only proposals with status = "accepted".
+// - For each accepted proposal, it pulls extra details from the related `jobs` doc and the client’s `users` doc,
+//   so the UI can display the job title, client name, skills, budget, duration, and my proposed rate.
+// - The job card gives a quick summary, and the dialog shows the full details + my original cover letter.
 //
-// References & Resources Used:
-// • Firestore filtered queries & real-time snapshots: https://firebase.google.com/docs/firestore/query-data/queries  
-// • Firestore document reads with getDoc/doc: https://firebase.google.com/docs/firestore/query-data/get-data  
-// • shadcn/ui components (Card, Badge, Button, Dialog): https://ui.shadcn.com  
-// • Lucide React Icons (Briefcase, Loader2, Eye, DollarSign, Clock, User, FileText): https://lucide.dev/icons  
-// • TailwindCSS for spacing, flex layouts, and responsiveness: https://tailwindcss.com/docs  
-// ---------------------------------------------
+// What I learned while building it:
+// - I got more comfortable doing “chained” Firestore lookups (proposal → job → client) without breaking the UI.
+// - I practiced using onSnapshot for real-time updates, and still keeping things clean with loading/empty states.
+// - I added a simple getTimeAgo() helper so the page shows when a job was accepted in a more natural way.
+// - I tried to make the page feel polished with shadcn/ui Cards/Badges + a Details dialog instead of dumping text.
+// - I also made sure the “no jobs yet” state looks friendly and doesn’t feel like an error.
+//
+// References I used while working on this:
+// • Firestore queries + where filters: https://firebase.google.com/docs/firestore/query-data/queries
+// • Reading documents with getDoc(): https://firebase.google.com/docs/firestore/query-data/get-data
+// • Firestore real-time listeners (onSnapshot): https://firebase.google.com/docs/firestore/query-data/listen
+// • shadcn/ui components: https://ui.shadcn.com
+// • TailwindCSS utilities (spacing/layout/responsive): https://tailwindcss.com/docs
+// • lucide-react icons: https://lucide.dev/icons
+//
+// Notes:
+// The main goal here was to keep the data accurate and easy to scan, while still making the “details” view
+// available when the professional actually needs to review the job or their proposal.
 'use client'; // Next.js directive: this component runs on the client side
 
 import { useEffect, useState } from "react"; // React hooks for state and side effects
