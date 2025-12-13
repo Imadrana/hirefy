@@ -1,4 +1,4 @@
- // ---------------------------------------------
+// ---------------------------------------------
 // Developer Reference Notes
 // ---------------------------------------------
 //
@@ -7,27 +7,32 @@
 // Members: Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar, Anandjit Kaur
 // File: app/find-jobs/page.tsx
 //
-// Description:
-// - Client-facing page where professionals can browse, search, and filter open jobs.
-// - Reads job posts from the Firestore `jobs` collection and only shows those with status "open".
-// - Enriches each job with client profile info (name and avatar) from the `users` collection.
-// - Supports text search on job titles and a skill dropdown to filter results.
-// - Lets professionals open a dialog, review key details, and submit a proposal stored in `proposals`.
+// What this page does:
+// This is the “Find Jobs” page where professionals can browse open job posts from clients.
+// It pulls job data from Firestore, shows it in clean job cards, and lets the user search by title
+// or filter by skill. When a professional is interested, they can open the proposal dialog and
+// submit a proposal that gets saved into Firestore.
 //
-// Development Process & Key Learnings:
-// - Practiced setting up a Firestore onSnapshot listener and then sorting the results by createdAt on the client.
-// - Implemented a simple `getTimeAgo` helper to display relative "Posted X ago" labels for each job card.
-// - Used React state to manage searchTerm, skillFilter, dialog visibility, and proposal form values cleanly.
-// - Added front-end validation for proposal rate and cover letter before writing to Firestore.
-// - Focused on making the layout responsive with a grid (1 column on mobile, 2 columns on larger screens).
+// How I built it / what I learned:
+// - I used a Firestore real-time listener (onSnapshot) so jobs update instantly without refreshing.
+// - To keep things simple and reliable, I filtered for “open” jobs and sorted by createdAt on the client side.
+// - I added a small helper (getTimeAgo) so job cards show a “Posted X ago” label, which makes the UI feel more real.
+// - I used React state to manage search/filter inputs and the proposal dialog form values.
+// - Before submitting a proposal, I added basic front-end checks (empty cover letter, invalid rate) to avoid bad writes.
+// - I also pulled the client’s name/avatar from the users collection so each job post looks complete and trustworthy.
 //
-// References & Resources Used:
-// • Next.js App Router & Client Components: https://nextjs.org/docs/app/building-your-application/routing  
-// • Firebase Firestore real-time listeners (onSnapshot): https://firebase.google.com/docs/firestore/query-data/listen  
-// • shadcn/ui components (Card, Badge, Button, Dialog, Input, Textarea, Avatar): https://ui.shadcn.com  
-// • Lucide React Icons (Search, Tag, DollarSign, Clock, FileText, Loader2): https://lucide.dev/icons  
-// • TailwindCSS utility classes & responsive grid: https://tailwindcss.com/docs  
+// References I used while working on this:
+// • Next.js App Router + Client Components: https://nextjs.org/docs/app/building-your-application/routing
+// • Firestore listeners & real-time updates (onSnapshot): https://firebase.google.com/docs/firestore/query-data/listen
+// • Firestore addDoc + serverTimestamp: https://firebase.google.com/docs/firestore/manage-data/add-data
+// • shadcn/ui component library: https://ui.shadcn.com
+// • TailwindCSS docs (layout + responsive grid): https://tailwindcss.com/docs
+// • lucide-react icons: https://lucide.dev/icons
 //
+// Notes:
+// The main goal here was to keep the job browsing experience fast, clean, and easy to use,
+// while making sure proposals are saved properly and the UI stays consistent with the Hirefy dashboard.
+
 'use client';
 
 import { useState, useEffect } from "react";
