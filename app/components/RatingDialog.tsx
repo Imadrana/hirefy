@@ -1,3 +1,49 @@
+// -------------------------------
+//  Developer Reference Notes
+// -------------------------------
+//
+// Project: Hirefy – On-Demand IT Service Platform
+// Group: S-Ware 
+// Members: Anandjit Kaur, Hassan Mir, Imad Rana, Kishan Patel, Mayur Tirkar
+// Folder: app/components/ui File: Navbar.tsx
+//
+// Description:
+// - Front-end React (TypeScript/Next.js) component for the Hirefy Navigation Bar  
+// - Manages navigation links and Firebase authentication state  
+// - Shows Login/Register for guests and Dashboard/Logout for logged-in users  
+// - Includes custom Hirefy SVG logo and mobile-friendly slide menu 
+//
+// Technical Understanding & Research Summary:
+// - Researched through:
+//   • Google search results on React navigation and authentication best practices  
+//   • Official React documentation: https://react.dev  
+//   • Next.js documentation: https://nextjs.org/docs  
+//   • Firebase Authentication docs: https://firebase.google.com/docs/auth  
+//   • YouTube tutorials on responsive navbars and authentication in React
+//     - https://www.youtube.com/watch?v=NWEukI8KsBI  
+//     - https://www.youtube.com/watch?v=6kgitEWTxac  
+//     - https://firebase.google.com/docs/auth
+// - Final code refined and documented with ChatGPT assistance for clarity and maintainability.  
+// -------------------------------
+// ChatGPT Prompt Used
+// -------------------------------
+// I gave ChatGPT the following prompt to help me write and understand
+// this component clearly:
+//
+// "I need you to create a responsive navigation bar (Navbar) for my Hirefy web application,
+// built with React (TypeScript/Next.js). It should manage navigation links, handle authentication
+// state with Firebase, support role-based dashboard routing, and include logout functionality.
+// The Navbar must include a custom logo, a dynamic user dropdown menu for authenticated users,
+// and a mobile-friendly layout for smaller screens, ensuring a seamless and modern user experience."
+// -------------------------------
+//  Summary:
+// - Language: TypeScript / TSX (React / Next.js)
+// - Side: Frontend Component (Client-side)
+// - Libraries Used: firebase/auth, next/link, next/navigation, shadcn/ui, lucide-react
+// - Purpose: To provide a responsive navigation bar with authentication awareness,
+//   dynamic role-based dashboard routing, and a modern mobile drawer menu.
+// -------------------------------
+//
 'use client';
 
 import { useState } from 'react';
