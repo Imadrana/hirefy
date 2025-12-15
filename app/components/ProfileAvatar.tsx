@@ -1,18 +1,37 @@
 'use client';
+// Marks this component as a Client Component (required for interactivity, events, hooks)
 
 import { User, Camera } from 'lucide-react';
-import Image from 'next/image';
-import { cn } from '@/lib/utils';
+// Icon components used for default avatar and edit overlay button
 
+import Image from 'next/image';
+// Next.js optimized Image component (automatic lazy loading, optimization)
+
+import { cn } from '@/lib/utils';
+// Utility function for safely combining conditional Tailwind class names
+
+/**
+ * ProfileAvatarProps
+ * ------------------
+ * Props definition for the ProfileAvatar component
+ */
 interface ProfileAvatarProps {
-    fullName?: string;
-    avatarUrl?: string;
-    size?: 'sm' | 'md' | 'lg' | 'xl';
-    editable?: boolean;
-    onEditClick?: () => void;
-    className?: string;
+    fullName?: string;            // Full name of the user (used to generate initials)
+    avatarUrl?: string;           // URL of uploaded profile image
+    size?: 'sm' | 'md' | 'lg' | 'xl'; // Predefined avatar sizes
+    editable?: boolean;           // Enables edit overlay button when true
+    onEditClick?: () => void;     // Callback when edit button is clicked
+    className?: string;           // Optional additional CSS classes
 }
 
+/**
+ * ProfileAvatar Component
+ * -----------------------
+ * Displays:
+ * - User initials with gradient background (fallback)
+ * - OR uploaded profile image
+ * - Optional edit button overlay
+ */
 export default function ProfileAvatar({
     fullName = '',
     avatarUrl,
@@ -21,7 +40,15 @@ export default function ProfileAvatar({
     onEditClick,
     className
 }: ProfileAvatarProps) {
-    // Get initials from full name
+
+    /**
+     * getInitials
+     * ------------
+     * Extracts initials from the user's full name
+     * - Single word → first letter
+     * - Multiple words → first + last initials
+     * - Empty value → defaults to "U"
+     */
     const getInitials = (name: string) => {
         if (!name || name.trim() === '') return 'U';
         
@@ -32,9 +59,14 @@ export default function ProfileAvatar({
         return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
     };
 
+    // Computed initials used when no avatar image exists
     const initials = getInitials(fullName);
 
-    // Size mappings
+    /**
+     * Size mappings
+     * -------------
+     * Centralized configuration for avatar dimensions and font sizing
+     */
     const sizeClasses = {
         sm: 'w-12 h-12 text-sm',
         md: 'w-20 h-20 text-xl',
@@ -42,6 +74,7 @@ export default function ProfileAvatar({
         xl: 'w-40 h-40 text-5xl'
     };
 
+    // Image size scaling (used to generate higher resolution images)
     const iconSizes = {
         sm: 16,
         md: 24,
@@ -49,6 +82,7 @@ export default function ProfileAvatar({
         xl: 48
     };
 
+    // Camera button container size
     const cameraSizes = {
         sm: 'w-6 h-6',
         md: 'w-8 h-8',
@@ -56,6 +90,7 @@ export default function ProfileAvatar({
         xl: 'w-12 h-12'
     };
 
+    // Camera icon SVG size
     const cameraIconSizes = {
         sm: 12,
         md: 14,
@@ -63,7 +98,15 @@ export default function ProfileAvatar({
         xl: 18
     };
 
-    // Check if avatarUrl is a placeholder
+    /**
+     * Placeholder detection
+     * ---------------------
+     * Determines whether to show initials instead of image
+     * Covers:
+     * - Missing URL
+     * - Known placeholder services
+     * - Empty string values
+     */
     const isPlaceholder = !avatarUrl || 
                          avatarUrl.includes('placehold.co') || 
                          avatarUrl.includes('placeholder') ||
@@ -71,17 +114,20 @@ export default function ProfileAvatar({
 
     return (
         <div className={cn('relative inline-block', className)}>
-            <div className={cn(
-                'rounded-full overflow-hidden flex items-center justify-center border-4 border-white shadow-lg',
-                sizeClasses[size]
-            )}>
+            {/* Avatar container */}
+            <div
+                className={cn(
+                    'rounded-full overflow-hidden flex items-center justify-center border-4 border-white shadow-lg',
+                    sizeClasses[size]
+                )}
+            >
                 {isPlaceholder ? (
-                    // Show initials with gradient background
+                    // Fallback: show initials with gradient background
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold">
                         {initials}
                     </div>
                 ) : (
-                    // Show uploaded image
+                    // Display uploaded avatar image
                     <Image
                         src={avatarUrl}
                         alt={fullName || 'Profile'}
@@ -92,7 +138,7 @@ export default function ProfileAvatar({
                 )}
             </div>
 
-            {/* Edit button overlay */}
+            {/* Edit avatar button overlay */}
             {editable && (
                 <button
                     type="button"
@@ -103,7 +149,10 @@ export default function ProfileAvatar({
                     )}
                     aria-label="Change profile picture"
                 >
-                    <Camera className={`w-${cameraIconSizes[size]} h-${cameraIconSizes[size]}`} size={cameraIconSizes[size]} />
+                    <Camera
+                        className={`w-${cameraIconSizes[size]} h-${cameraIconSizes[size]}`}
+                        size={cameraIconSizes[size]}
+                    />
                 </button>
             )}
         </div>
